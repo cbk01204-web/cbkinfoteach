@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CBK INFOTECH HRMS - A professional, highly scalable Human Resource Management System.">
+    <title>Departments - Admin - CBK INFOTECH</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body class="dashboard-page">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="images/logo.jpg" alt="CBK Logo" class="brand-logo-img mr-2">
+                <h2>CBK INFOTECH</h2>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="admin-dashboard.html" class="menu-item"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                <a href="admin-employees.html" class="menu-item"><i class="fa-solid fa-users"></i> Employees</a>
+                <a href="admin-attendance.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Attendance</a>
+                <a href="admin-leaves.html" class="menu-item"><i class="fa-solid fa-bed"></i> Leave Requests</a>
+                <a href="admin-payroll.html" class="menu-item"><i class="fa-solid fa-money-check-dollar"></i> Payroll</a>
+                <a href="admin-payslips.html" class="menu-item"><i class="fa-solid fa-file-invoice"></i> Payslips</a>
+                <a href="admin-reports.html" class="menu-item"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+                <a href="admin-settings.html" class="menu-item"><i class="fa-solid fa-gear"></i> Settings</a>
+                <a href="admin-departments.html" class="menu-item active"><i class="fa-solid fa-building"></i> Departments</a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="btn btn-outline" style="width: 100%; border-radius: 8px;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn icon-btn" style="display: none;"><i class="fa-solid fa-bars"></i></button>
+                    <div style="font-weight: 500; font-size: 1.125rem;">Departments Overview</div>
+                </div>
+                
+                <div class="header-right">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Dark/Light Mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+                        <div class="user-info">
+                            <p>Admin User</p>
+                            <span>HR Director</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Overview stats cards -->
+                <div class="stats-grid" id="departments-stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3 id="stat-total-depts">5</h3>
+                            <p>Active Departments</p>
+                        </div>
+                        <div class="stat-icon primary"><i class="fa-solid fa-building"></i></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3 id="stat-total-emp">0</h3>
+                            <p>Assigned Employees</p>
+                        </div>
+                        <div class="stat-icon success"><i class="fa-solid fa-users"></i></div>
+                    </div>
+                </div>
+
+                <!-- Departments Grid cards -->
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));" id="departments-grid">
+                    <!-- Dynamic rendering of departments cards -->
+                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i> Loading department details...
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Department Members Modal -->
+    <div id="dept-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 id="dept-modal-title">Engineering Department</h2>
+                <button id="close-dept-modal" class="close-modal">&times;</button>
+            </div>
+            
+            <div style="margin-top: 1rem;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dept-modal-tbody">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="action-btns" style="margin-top: 1.5rem;">
+                <button type="button" id="close-dept-modal-btn" class="btn btn-outline">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { checkAuthState, logoutUser } from './js/auth.js';
+        import { initAdminDepartments } from './js/admin-departments.js';
+        import './js/app.js';
+
+        const init = () => {
+            initAdminDepartments();
+
+            // Logout button
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logoutUser();
+                });
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Protect route
+        checkAuthState('admin');
+    </script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CBK INFOTECH HRMS - A professional, highly scalable Human Resource Management System.">
+    <meta name="keywords" content="HRMS, HR, CBK INFOTECH, Employee Management, Payroll, Attendance">
+    <meta name="author" content="CBK INFOTECH">
+    <meta property="og:title" content="CBK INFOTECH HRMS">
+    <meta property="og:description" content="Manage your workforce efficiently.">
+    <title>Reports Dashboard - Admin - CBK INFOTECH</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF and AutoTable for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="dashboard-page">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="images/logo.jpg" alt="CBK Logo" class="brand-logo-img mr-2">
+                <h2>CBK INFOTECH</h2>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="admin-dashboard.html" class="menu-item"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                <a href="admin-employees.html" class="menu-item"><i class="fa-solid fa-users"></i> Employees</a>
+                <a href="admin-attendance.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Attendance</a>
+                <a href="admin-leaves.html" class="menu-item"><i class="fa-solid fa-bed"></i> Leave Requests</a>
+                <a href="admin-payroll.html" class="menu-item"><i class="fa-solid fa-money-check-dollar"></i> Payroll</a>
+                <a href="admin-payslips.html" class="menu-item"><i class="fa-solid fa-file-invoice"></i> Payslips</a>
+                <a href="admin-reports.html" class="menu-item active"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+                <a href="admin-settings.html" class="menu-item"><i class="fa-solid fa-gear"></i> Settings</a>
+                <a href="admin-departments.html" class="menu-item"><i class="fa-solid fa-building"></i> Departments</a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="btn btn-outline" style="width: 100%; border-radius: 8px;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn icon-btn" style="display: none;"><i class="fa-solid fa-bars"></i></button>
+                    <div style="font-weight: 500; font-size: 1.125rem;">Analytics & Reports</div>
+                </div>
+                
+                <div class="header-right">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Dark/Light Mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+                        <div class="user-info">
+                            <p>Admin User</p>
+                            <span>HR Director</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Control Panel -->
+                <div class="table-card" style="margin-bottom: 2rem;">
+                    <div class="table-header" style="margin-bottom: 0;">
+                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                            <label style="font-weight: 500; color: var(--text-muted);">Report Type:</label>
+                            <select id="report-type" class="form-control" style="width: auto; background: var(--bg-main);">
+                                <option value="Attendance">Attendance Report</option>
+                                <option value="Payroll">Payroll Report</option>
+                                <option value="Employees">Employee Report</option>
+                                <option value="Leaves">Leave Report</option>
+                                <option value="Departments">Department Report</option>
+                            </select>
+
+                            <label style="font-weight: 500; color: var(--text-muted); margin-left: 1rem;">Month Filter:</label>
+                            <input type="month" id="month-filter" class="form-control" style="width: auto; background: var(--bg-main);">
+                            
+                            <button id="generate-btn" class="btn btn-primary"><i class="fa-solid fa-bolt mr-2"></i> Generate</button>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button id="export-pdf-btn" class="btn btn-outline" style="color: var(--danger); border-color: var(--danger);"><i class="fa-solid fa-file-pdf mr-2"></i> PDF</button>
+                            <button id="export-excel-btn" class="btn btn-outline" style="color: var(--secondary); border-color: var(--secondary);"><i class="fa-solid fa-file-excel mr-2"></i> Excel</button>
+                            <button id="export-csv-btn" class="btn btn-outline" style="color: var(--primary); border-color: var(--primary);"><i class="fa-solid fa-file-csv mr-2"></i> CSV</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization -->
+                <div class="charts-grid" style="grid-template-columns: 1fr; margin-bottom: 2rem;" id="chart-container-wrapper">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 id="chart-title">Monthly Overview</h3>
+                        </div>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="reportChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3 id="table-title">Report Data</h3>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" id="report-table">
+                            <thead id="report-thead">
+                                <tr>
+                                    <th>Select a report to generate</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-tbody">
+                                <tr>
+                                    <td style="text-align: center; padding: 2rem;">No data generated.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { checkAuthState, logoutUser } from './js/auth.js';
+        import { initAdminReports } from './js/admin-reports.js';
+        import './js/app.js';
+
+        const init = () => {
+            initAdminReports();
+            
+            // Theme toggle
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            if (themeToggleBtn) {
+                const currentTheme = localStorage.getItem('theme');
+                if (currentTheme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                    themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                }
+                themeToggleBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-theme');
+                    let theme = 'light';
+                    if (document.body.classList.contains('dark-theme')) {
+                        theme = 'dark';
+                        themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                    } else {
+                        themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                    }
+                    localStorage.setItem('theme', theme);
+                });
+            }
+
+            // Logout button
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logoutUser();
+                });
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Protect route (non-blocking)
+        checkAuthState('admin');
+    </script>
+</body>
+</html>
+
+

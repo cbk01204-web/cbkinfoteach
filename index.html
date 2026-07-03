@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="js/suppress-warnings.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CBK INFOTECH HRMS - A professional, highly scalable Human Resource Management System.">
+    <meta name="keywords" content="HRMS, HR, CBK INFOTECH, Employee Management, Payroll, Attendance">
+    <meta name="author" content="CBK INFOTECH">
+    <meta property="og:title" content="CBK INFOTECH HRMS">
+    <meta property="og:description" content="Manage your workforce efficiently.">
+    <title>CBK INFOTECH - Human Resource Management</title>
+    <link rel="icon" type="image/jpeg" href="images/logo.jpg">
+    <!-- Use base style for buttons and reset, and landing for specifics -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/landing.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="glass-navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <img src="images/logo.jpg" alt="CBK Logo" class="brand-logo-img"> CBK INFOTECH
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#portals">Portals</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="hero-content glass-panel">
+            <h1>Elevate Your Workforce</h1>
+            <p>Experience the next generation of Human Resource Management. Streamlined, secure, and designed for modern enterprises.</p>
+            <a href="#portals" class="btn btn-primary btn-lg">Access Portals <i class="fa-solid fa-arrow-down"></i></a>
+        </div>
+    </section>
+
+    <!-- Portals Section with Two Large Cards -->
+    <section id="portals" class="portals-section">
+        <h2 class="section-title text-white">Select Your Workspace</h2>
+        <div class="portals-container">
+            <!-- Employee Card -->
+            <div class="portal-card glass-panel" onclick="window.location.href='employee-login.html'">
+                <div class="portal-icon">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <h3>Employee Portal</h3>
+                <p>Access your profile, view payslips, submit leave requests, and mark attendance from your dedicated dashboard.</p>
+                <a href="employee-login.html" class="btn btn-primary portal-btn">Login as Employee</a>
+            </div>
+
+            <!-- Admin Card -->
+            <div class="portal-card glass-panel" onclick="window.location.href='admin-login.html'">
+                <div class="portal-icon">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <h3>Admin Portal</h3>
+                <p>Manage employees, oversee payroll, track company attendance, and configure system settings with ease.</p>
+                <a href="admin-login.html" class="btn portal-btn" style="background-color: var(--secondary); color: white; border: none;">Login as Admin</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <h2 class="section-title text-white">Why Choose CBK INFOTECH?</h2>
+        <div class="features-grid">
+            <div class="feature-card glass-panel">
+                <i class="fa-solid fa-bolt feature-icon"></i>
+                <h4>Lightning Fast</h4>
+                <p>Optimized performance ensuring quick access to vital HR data and seamless daily operations.</p>
+            </div>
+            <div class="feature-card glass-panel">
+                <i class="fa-solid fa-shield-halved feature-icon"></i>
+                <h4>Bank-Grade Security</h4>
+                <p>Your data is protected with state-of-the-art encryption, secure authentication, and robust infrastructure.</p>
+            </div>
+            <div class="feature-card glass-panel">
+                <i class="fa-solid fa-chart-pie feature-icon"></i>
+                <h4>Advanced Analytics</h4>
+                <p>Gain actionable insights into your workforce with visual reports, attendance tracking, and payroll summaries.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer glass-panel">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <h3>CBK INFOTECH</h3>
+                <p>Empowering the modern enterprise.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact Support</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 CBK INFOTECH. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <!-- Smooth scrolling script -->
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const targetId = this.getAttribute('href');
+                if (targetId && targetId !== '#') {
+                    e.preventDefault();
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+

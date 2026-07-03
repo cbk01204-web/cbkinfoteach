@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CBK INFOTECH HRMS - A professional, highly scalable Human Resource Management System.">
+    <meta name="keywords" content="HRMS, HR, CBK INFOTECH, Employee Management, Payroll, Attendance">
+    <meta name="author" content="CBK INFOTECH">
+    <meta property="og:title" content="CBK INFOTECH HRMS">
+    <meta property="og:description" content="Manage your workforce efficiently.">
+    <title>Settings - Admin - CBK INFOTECH</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <style>
+        .settings-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        
+        .settings-nav {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .settings-nav-item:hover {
+            background: var(--hover-bg);
+            color: var(--text-main);
+        }
+
+        .settings-nav-item.active {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 500;
+        }
+
+        .settings-nav-item i {
+            margin-right: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .settings-panel {
+            display: none;
+        }
+
+        .settings-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="dashboard-page">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="images/logo.jpg" alt="CBK Logo" class="brand-logo-img mr-2">
+                <h2>CBK INFOTECH</h2>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="admin-dashboard.html" class="menu-item"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                <a href="admin-employees.html" class="menu-item"><i class="fa-solid fa-users"></i> Employees</a>
+                <a href="admin-attendance.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Attendance</a>
+                <a href="admin-leaves.html" class="menu-item"><i class="fa-solid fa-bed"></i> Leave Requests</a>
+                <a href="admin-payroll.html" class="menu-item"><i class="fa-solid fa-money-check-dollar"></i> Payroll</a>
+                <a href="admin-payslips.html" class="menu-item"><i class="fa-solid fa-file-invoice"></i> Payslips</a>
+                <a href="admin-reports.html" class="menu-item"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+                <a href="admin-settings.html" class="menu-item active"><i class="fa-solid fa-gear"></i> Settings</a>
+                <a href="admin-departments.html" class="menu-item"><i class="fa-solid fa-building"></i> Departments</a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="btn btn-outline" style="width: 100%; border-radius: 8px;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn icon-btn" style="display: none;"><i class="fa-solid fa-bars"></i></button>
+                    <div style="font-weight: 500; font-size: 1.125rem;">System Configuration</div>
+                </div>
+                
+                <div class="header-right">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Dark/Light Mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+                        <div class="user-info">
+                            <p>Admin User</p>
+                            <span>HR Director</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="settings-container">
+                    
+                    <!-- Settings Navigation -->
+                    <div class="settings-nav">
+                        <div class="settings-nav-item active" data-target="panel-general">
+                            <i class="fa-solid fa-building"></i> Company Details
+                        </div>
+                        <div class="settings-nav-item" data-target="panel-appearance">
+                            <i class="fa-solid fa-palette"></i> Appearance
+                        </div>
+                        <div class="settings-nav-item" data-target="panel-security">
+                            <i class="fa-solid fa-shield-halved"></i> Security & Auth
+                        </div>
+                        <div class="settings-nav-item" data-target="panel-firebase">
+                            <i class="fa-solid fa-database"></i> Firebase Config
+                        </div>
+                        <div class="settings-nav-item" data-target="panel-backup">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> Data Backup
+                        </div>
+                    </div>
+
+                    <!-- Settings Panels -->
+                    <div class="settings-content">
+                        
+                        <!-- General Panel -->
+                        <div class="table-card settings-panel active" id="panel-general">
+                            <div class="table-header">
+                                <h3>Company Details</h3>
+                            </div>
+                            <form id="company-form" style="padding: 1rem;">
+                                <div class="form-group" style="margin-bottom: 1.5rem;">
+                                    <label class="form-label">Company Name</label>
+                                    <input type="text" id="comp-name" class="form-control" placeholder="CBK INFOTECH" required>
+                                </div>
+                                <div class="form-row" style="margin-bottom: 1.5rem;">
+                                    <div class="form-group">
+                                        <label class="form-label">Contact Email</label>
+                                        <input type="email" id="comp-email" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Support Phone</label>
+                                        <input type="tel" id="comp-phone" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 1.5rem;">
+                                    <label class="form-label">Registered Address</label>
+                                    <textarea id="comp-address" class="form-control" rows="3"></textarea>
+                                </div>
+                                <div style="text-align: right;">
+                                    <button type="submit" id="save-company-btn" class="btn btn-primary"><i class="fa-solid fa-save mr-2"></i> Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Appearance Panel -->
+                        <div class="table-card settings-panel" id="panel-appearance">
+                            <div class="table-header">
+                                <h3>Appearance Preferences</h3>
+                            </div>
+                            <div style="padding: 1rem;">
+                                <div class="form-group" style="margin-bottom: 2rem;">
+                                    <label class="form-label">System Theme</label>
+                                    <select id="theme-select" class="form-control" style="max-width: 300px;">
+                                        <option value="light">Light Mode</option>
+                                        <option value="dark">Dark Mode</option>
+                                    </select>
+                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Changes take effect immediately across your browser.</p>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 1.5rem;">
+                                    <label class="form-label">Language</label>
+                                    <select id="lang-select" class="form-control" style="max-width: 300px;">
+                                        <option value="en">English (US)</option>
+                                        <option value="es">EspaÃ±ol</option>
+                                        <option value="fr">FranÃ§ais</option>
+                                    </select>
+                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Note: Full language translation requires an additional dictionary module.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Panel -->
+                        <div class="table-card settings-panel" id="panel-security">
+                            <div class="table-header">
+                                <h3>Admin Security</h3>
+                            </div>
+                            <form id="admin-security-form" style="padding: 1rem;">
+                                <div class="form-group" style="margin-bottom: 1.5rem;">
+                                    <label class="form-label">New Admin Password</label>
+                                    <input type="password" id="admin-new-pwd" class="form-control" minlength="6" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 1.5rem;">
+                                    <label class="form-label">Confirm Password</label>
+                                    <input type="password" id="admin-conf-pwd" class="form-control" minlength="6" required>
+                                </div>
+                                <div style="text-align: right;">
+                                    <button type="submit" id="save-admin-pwd-btn" class="btn btn-outline" style="color: var(--danger); border-color: var(--danger);"><i class="fa-solid fa-lock mr-2"></i> Update Password</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Firebase Panel -->
+                        <div class="table-card settings-panel" id="panel-firebase">
+                            <div class="table-header">
+                                <h3>Firebase Configuration (View Only)</h3>
+                            </div>
+                            <div style="padding: 1rem;">
+                                <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+                                    <p style="margin: 0; color: var(--text-main);"><i class="fa-solid fa-triangle-exclamation mr-2" style="color: var(--danger);"></i> <strong>Warning:</strong> Modifying API keys dynamically can sever connection to the database. These values are locked.</p>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 1rem;">
+                                    <label class="form-label">Project ID</label>
+                                    <input type="text" class="form-control" value="cbk-hrms-v1" readonly style="background: var(--bg-main); cursor: not-allowed; font-family: monospace;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 1rem;">
+                                    <label class="form-label">Auth Domain</label>
+                                    <input type="text" class="form-control" value="cbk-hrms-v1.firebaseapp.com" readonly style="background: var(--bg-main); cursor: not-allowed; font-family: monospace;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 1rem;">
+                                    <label class="form-label">Storage Bucket</label>
+                                    <input type="text" class="form-control" value="cbk-hrms-v1.appspot.com" readonly style="background: var(--bg-main); cursor: not-allowed; font-family: monospace;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Backup Panel -->
+                        <div class="table-card settings-panel" id="panel-backup">
+                            <div class="table-header">
+                                <h3>Data Management</h3>
+                            </div>
+                            <div style="padding: 1rem;">
+                                <h4>Database Backup</h4>
+                                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                                    Generate a complete JSON snapshot of all Core Collections (Employees, Attendance, Leaves, Payroll, Settings). This process runs locally in your browser.
+                                </p>
+                                
+                                <button id="trigger-backup-btn" class="btn btn-primary">
+                                    <i class="fa-solid fa-download mr-2"></i> Download Full Backup
+                                </button>
+                                
+                                <div id="backup-status" style="margin-top: 1rem; font-weight: 500; font-size: 0.9rem; display: none;">
+                                    <!-- Status injected via JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { checkAuthState, logoutUser } from './js/auth.js';
+        import { initAdminSettings } from './js/admin-settings.js';
+        import './js/app.js';
+
+        const init = () => {
+            initAdminSettings();
+            
+            // Theme toggle is handled natively inside admin-settings logic, 
+            // but we keep the header toggle functional too.
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            if (themeToggleBtn) {
+                const currentTheme = localStorage.getItem('theme');
+                if (currentTheme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                    themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                }
+                themeToggleBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-theme');
+                    let theme = 'light';
+                    if (document.body.classList.contains('dark-theme')) {
+                        theme = 'dark';
+                        themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                    } else {
+                        themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                    }
+                    localStorage.setItem('theme', theme);
+                    
+                    // Sync dropdown if exists
+                    const sel = document.getElementById('theme-select');
+                    if (sel) sel.value = theme;
+                });
+            }
+
+            // Logout button
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logoutUser();
+                });
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Protect route (non-blocking)
+        checkAuthState('admin');
+    </script>
+</body>
+</html>
+
+

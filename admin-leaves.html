@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CBK INFOTECH HRMS - A professional, highly scalable Human Resource Management System.">
+    <meta name="keywords" content="HRMS, HR, CBK INFOTECH, Employee Management, Payroll, Attendance">
+    <meta name="author" content="CBK INFOTECH">
+    <meta property="og:title" content="CBK INFOTECH HRMS">
+    <meta property="og:description" content="Manage your workforce efficiently.">
+    <title>Leave Requests - Admin - CBK INFOTECH</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body class="dashboard-page">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="images/logo.jpg" alt="CBK Logo" class="brand-logo-img mr-2">
+                <h2>CBK INFOTECH</h2>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="admin-dashboard.html" class="menu-item"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                <a href="admin-employees.html" class="menu-item"><i class="fa-solid fa-users"></i> Employees</a>
+                <a href="admin-attendance.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Attendance</a>
+                <a href="admin-leaves.html" class="menu-item active"><i class="fa-solid fa-bed"></i> Leave Requests</a>
+                <a href="admin-payroll.html" class="menu-item"><i class="fa-solid fa-money-check-dollar"></i> Payroll</a>
+                <a href="admin-payslips.html" class="menu-item"><i class="fa-solid fa-file-invoice"></i> Payslips</a>
+                <a href="admin-reports.html" class="menu-item"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+                <a href="admin-settings.html" class="menu-item"><i class="fa-solid fa-gear"></i> Settings</a>
+                <a href="admin-departments.html" class="menu-item"><i class="fa-solid fa-building"></i> Departments</a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="btn btn-outline" style="width: 100%; border-radius: 8px;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn icon-btn" style="display: none;"><i class="fa-solid fa-bars"></i></button>
+                    <div style="font-weight: 500; font-size: 1.125rem;">Leave Requests Review</div>
+                </div>
+                
+                <div class="header-right">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Dark/Light Mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+                        <div class="user-info">
+                            <p>Admin User</p>
+                            <span>HR Director</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Filter -->
+                <div class="table-card" style="margin-bottom: 2rem;">
+                    <div class="table-header" style="margin-bottom: 0;">
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <label for="status-filter" style="font-weight: 500; color: var(--text-muted);">Filter Status:</label>
+                            <select id="status-filter" class="form-control" style="width: auto; background: var(--bg-main);">
+                                <option value="Pending">Pending Review</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="All">All Requests</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leave Summary Statistics -->
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 2rem;">
+                    <!-- Pending Requests -->
+                    <div class="stat-card" style="padding: 1rem;">
+                        <div class="stat-info">
+                            <h3 id="stat-pending-leaves"><span class="skeleton" style="width: 40px; height: 18px;"></span></h3>
+                            <p style="font-size: 0.8rem;">Pending Requests</p>
+                        </div>
+                        <div class="stat-icon warning" style="width: 32px; height: 32px; font-size: 0.85rem; border-radius: 6px;"><i class="fa-solid fa-clock"></i></div>
+                    </div>
+
+                    <!-- Approved Leaves -->
+                    <div class="stat-card" style="padding: 1rem;">
+                        <div class="stat-info">
+                            <h3 id="stat-approved-leaves"><span class="skeleton" style="width: 40px; height: 18px;"></span></h3>
+                            <p style="font-size: 0.8rem;">Approved Leaves</p>
+                        </div>
+                        <div class="stat-icon success" style="width: 32px; height: 32px; font-size: 0.85rem; border-radius: 6px;"><i class="fa-solid fa-circle-check"></i></div>
+                    </div>
+
+                    <!-- Rejected Leaves -->
+                    <div class="stat-card" style="padding: 1rem;">
+                        <div class="stat-info">
+                            <h3 id="stat-rejected-leaves"><span class="skeleton" style="width: 40px; height: 18px;"></span></h3>
+                            <p style="font-size: 0.8rem;">Rejected Leaves</p>
+                        </div>
+                        <div class="stat-icon danger" style="background-color: rgba(239, 68, 68, 0.1); color: var(--danger); width: 32px; height: 32px; font-size: 0.85rem; border-radius: 6px;"><i class="fa-solid fa-circle-xmark"></i></div>
+                    </div>
+
+                    <!-- Employees Currently On Leave -->
+                    <div class="stat-card" style="padding: 1rem;">
+                        <div class="stat-info">
+                            <h3 id="stat-active-leaves"><span class="skeleton" style="width: 40px; height: 18px;"></span></h3>
+                            <p style="font-size: 0.8rem;">On Leave Today</p>
+                        </div>
+                        <div class="stat-icon info" style="background-color: rgba(14, 165, 233, 0.1); color: var(--info); width: 32px; height: 32px; font-size: 0.85rem; border-radius: 6px;"><i class="fa-solid fa-plane-departure"></i></div>
+                    </div>
+
+                    <!-- Upcoming Leaves -->
+                    <div class="stat-card" style="padding: 1rem;">
+                        <div class="stat-info">
+                            <h3 id="stat-upcoming-leaves"><span class="skeleton" style="width: 40px; height: 18px;"></span></h3>
+                            <p style="font-size: 0.8rem;">Upcoming Leaves</p>
+                        </div>
+                        <div class="stat-icon primary" style="background-color: rgba(79, 70, 229, 0.1); color: var(--primary); width: 32px; height: 32px; font-size: 0.85rem; border-radius: 6px;"><i class="fa-solid fa-calendar-days"></i></div>
+                    </div>
+                </div>
+
+                <!-- Two-Column Layout Grid -->
+                <div class="charts-grid" style="grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: start; margin-bottom: 2rem;">
+                    <!-- Left: Leave Applications Data Table -->
+                    <div class="table-card" style="margin-bottom: 0;">
+                        <div class="table-header">
+                            <h3>Leave Applications</h3>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Type</th>
+                                        <th>Duration</th>
+                                        <th>Dates</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-leaves-body">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; padding: 2rem;">
+                                            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right: Leave Balance Summary -->
+                    <div class="table-card" style="margin-bottom: 0;">
+                        <div class="table-header">
+                            <h3>Leave Balance Summary</h3>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table" style="font-size: 0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Annual (Rem)</th>
+                                        <th>Sick (Rem)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leave-balance-body">
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; padding: 1.5rem;">
+                                            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { checkAuthState, logoutUser } from './js/auth.js';
+        import { initAdminLeaves } from './js/admin-leaves.js';
+        import './js/app.js';
+
+        const init = () => {
+            initAdminLeaves();
+            
+            // Theme toggle
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            if (themeToggleBtn) {
+                const currentTheme = localStorage.getItem('theme');
+                if (currentTheme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                    themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                }
+                themeToggleBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-theme');
+                    let theme = 'light';
+                    if (document.body.classList.contains('dark-theme')) {
+                        theme = 'dark';
+                        themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                    } else {
+                        themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                    }
+                    localStorage.setItem('theme', theme);
+                });
+            }
+
+            // Logout button
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logoutUser();
+                });
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Protect route (non-blocking)
+        checkAuthState('admin');
+    </script>
+</body>
+</html>
+
+

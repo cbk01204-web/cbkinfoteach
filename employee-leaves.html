@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CBK INFOTECH HRMS - A professional, highly scalable Human Resource Management System.">
+    <meta name="keywords" content="HRMS, HR, CBK INFOTECH, Employee Management, Payroll, Attendance">
+    <meta name="author" content="CBK INFOTECH">
+    <meta property="og:title" content="CBK INFOTECH HRMS">
+    <meta property="og:description" content="Manage your workforce efficiently.">
+    <title>My Leaves - Employee - CBK INFOTECH</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/employee.css">
+    <!-- Include admin.css for modal styles -->
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body class="dashboard-page">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="images/logo.jpg" alt="CBK Logo" class="brand-logo-img mr-2">
+                <h2>CBK INFOTECH</h2>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="employee-dashboard.html" class="menu-item"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                <a href="employee-profile.html" class="menu-item"><i class="fa-solid fa-user"></i> Profile</a>
+                <a href="employee-dashboard.html#attendance-section" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Attendance</a>
+                <a href="employee-leaves.html" class="menu-item active"><i class="fa-solid fa-bed"></i> Leaves</a>
+                <a href="employee-payslips.html" class="menu-item"><i class="fa-solid fa-file-invoice-dollar"></i> Payslips</a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="btn btn-outline" style="width: 100%; border-radius: 8px;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn icon-btn" style="display: none;"><i class="fa-solid fa-bars"></i></button>
+                    <div style="font-weight: 500; font-size: 1.125rem;">Leave Management</div>
+                </div>
+                
+                <div class="header-right" style="display: flex; align-items: center;">
+                    <!-- Notification Bell -->
+                    <div class="notification-wrapper" id="notification-wrapper">
+                        <button class="notification-bell" id="notification-bell">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notification-badge" id="notification-badge">0</span>
+                        </button>
+                        <div class="notification-dropdown" id="notification-dropdown">
+                            <div class="notification-header">
+                                <span>Notifications</span>
+                                <span style="font-size: 0.75rem; color: var(--primary); cursor: pointer;" id="mark-all-read">Mark all read</span>
+                            </div>
+                            <div class="notification-body" id="notification-list">
+                                <div style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Dark/Light Mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar" style="background: linear-gradient(135deg, #10b981, #34d399);"><i class="fa-solid fa-user"></i></div>
+                        <div class="user-info">
+                            <p>John Doe</p>
+                            <span>Software Engineer</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="table-card" style="margin-bottom: 2rem;">
+                    <div class="table-header" style="margin-bottom: 0;">
+                        <h3 style="margin:0;">My Leave Requests</h3>
+                        <button id="apply-leave-btn" class="btn btn-primary"><i class="fa-solid fa-plus mr-2"></i> Apply Leave</button>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="table-card">
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Leave Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Duration</th>
+                                    <th>Applied On</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaves-table-body">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 2rem;">
+                                        <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Apply Leave Modal -->
+    <div id="leave-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Apply for Leave</h2>
+                <button id="close-modal-btn" class="close-modal"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="leave-form">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label">Leave Type</label>
+                    <select id="leave-type" class="form-control" required>
+                        <option value="">Select type...</option>
+                        <option value="Annual Leave">Annual Leave</option>
+                        <option value="Sick Leave">Sick Leave</option>
+                        <option value="Unpaid Leave">Unpaid Leave</option>
+                    </select>
+                </div>
+
+                <div class="form-row" style="margin-bottom: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" id="start-date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">End Date</label>
+                        <input type="date" id="end-date" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label">Reason</label>
+                    <textarea id="leave-reason" class="form-control" rows="3" required placeholder="Please provide a reason..."></textarea>
+                </div>
+
+                <div class="action-btns">
+                    <button type="button" id="cancel-modal-btn" class="btn btn-outline">Cancel</button>
+                    <button type="submit" id="submit-leave-btn" class="btn btn-primary">Submit Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { checkAuthState, logoutUser } from './js/auth.js';
+        import { initEmployeeLeaves } from './js/employee-leaves.js';
+        import { initNotifications } from './js/notifications.js';
+        import './js/app.js';
+
+        const init = () => {
+            initEmployeeLeaves();
+            initNotifications();
+            
+            // Handle Theme toggle
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            if (themeToggleBtn) {
+                const currentTheme = localStorage.getItem('theme');
+                if (currentTheme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                    themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                }
+                themeToggleBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-theme');
+                    let theme = 'light';
+                    if (document.body.classList.contains('dark-theme')) {
+                        theme = 'dark';
+                        themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                    } else {
+                        themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                    }
+                    localStorage.setItem('theme', theme);
+                });
+            }
+
+            // Logout button
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logoutUser();
+                });
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Protect route (non-blocking)
+        checkAuthState('employee');
+    </script>
+</body>
+</html>
+
+

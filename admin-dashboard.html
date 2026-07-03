@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CBK INFOTECH HRMS - Real-time Admin Dashboard for Human Resource Management.">
+    <meta name="author" content="CBK INFOTECH">
+    <meta property="og:title" content="Admin Dashboard | CBK INFOTECH HRMS">
+    <meta property="og:description" content="Manage your workforce in real time.">
+    <title>Admin Dashboard — CBK INFOTECH HRMS</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+
+    <!-- Chart.js (deferred to avoid render-blocking) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+</head>
+<body class="dashboard-page">
+<div class="dashboard-layout">
+
+    <!-- ── Sidebar ──────────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Primary navigation">
+        <div class="sidebar-brand" role="banner">
+            <img src="images/logo.jpg" alt="CBK Infotech Logo" class="brand-logo-img mr-2" width="32" height="32">
+            <h2>CBK INFOTECH</h2>
+        </div>
+
+        <nav class="sidebar-menu" aria-label="Dashboard navigation">
+            <a href="admin-dashboard.html" class="menu-item active" aria-current="page">
+                <i class="fa-solid fa-border-all" aria-hidden="true"></i> Dashboard
+            </a>
+            <a href="admin-employees.html" class="menu-item">
+                <i class="fa-solid fa-users" aria-hidden="true"></i> Employees
+            </a>
+            <a href="admin-attendance.html" class="menu-item">
+                <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Attendance
+            </a>
+            <a href="admin-leaves.html" class="menu-item">
+                <i class="fa-solid fa-bed" aria-hidden="true"></i> Leave Requests
+            </a>
+            <a href="admin-payroll.html" class="menu-item">
+                <i class="fa-solid fa-money-check-dollar" aria-hidden="true"></i> Payroll
+            </a>
+            <a href="admin-payslips.html" class="menu-item">
+                <i class="fa-solid fa-file-invoice" aria-hidden="true"></i> Payslips
+            </a>
+            <a href="admin-reports.html" class="menu-item">
+                <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Reports
+            </a>
+            <a href="admin-departments.html" class="menu-item">
+                <i class="fa-solid fa-building" aria-hidden="true"></i> Departments
+            </a>
+            <a href="admin-settings.html" class="menu-item">
+                <i class="fa-solid fa-gear" aria-hidden="true"></i> Settings
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button id="logout-btn" class="btn btn-outline" style="width:100%; border-radius:8px;" aria-label="Sign out">
+                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Logout
+            </button>
+        </div>
+    </aside>
+    <!-- Sidebar overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+    <!-- ── Main Content ──────────────────────────────────────── -->
+    <main class="main-content" id="main-content">
+
+        <!-- Top Header -->
+        <header class="header" role="banner">
+            <div class="header-left">
+                <button class="mobile-menu-btn icon-btn" id="mobile-menu-btn"
+                        aria-label="Open navigation menu" aria-expanded="false" aria-controls="sidebar">
+                    <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                </button>
+
+                <div class="search-bar" role="search">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true" style="color:var(--text-muted);"></i>
+                    <input type="search" id="header-search-input"
+                           placeholder="Search employees, reports…"
+                           aria-label="Search employees and reports"
+                           autocomplete="off">
+                </div>
+            </div>
+
+            <div class="header-right" role="toolbar" aria-label="Header actions">
+                <!-- Notification Bell (injected by app.js) -->
+                <button id="theme-toggle" class="icon-btn" title="Toggle dark / light mode" aria-label="Toggle colour theme">
+                    <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                </button>
+
+                <!-- Live indicator dot -->
+                <span title="Real-time sync active" style="display:flex;align-items:center;gap:0.35rem;font-size:0.7rem;color:var(--text-muted);">
+                    <span style="width:7px;height:7px;border-radius:50%;background:#10b981;animation:pulse 2s infinite;" aria-hidden="true"></span>
+                    Live
+                </span>
+
+                <div class="user-profile" role="button" tabindex="0" aria-label="User account menu">
+                    <div class="avatar" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></div>
+                    <div class="user-info">
+                        <p id="header-user-name">Admin User</p>
+                        <span>HR Director</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true" style="font-size:.7rem;color:var(--text-muted);"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <div class="content-wrapper" id="content-wrapper">
+
+            <!-- Page Title -->
+            <div class="page-title">
+                <div>
+                    <h1>Dashboard Overview</h1>
+                    <p style="color:var(--text-muted);font-size:.875rem;margin-top:.2rem;">
+                        Welcome back! Here's what's happening across the company.
+                    </p>
+                </div>
+                <time id="live-clock" datetime="" aria-live="off"
+                      style="font-size:.8rem;color:var(--text-muted);font-variant-numeric:tabular-nums;"></time>
+            </div>
+
+            <!-- ── Quick Actions ─────────────────────────────── -->
+            <section aria-label="Quick actions" class="table-card" style="margin-bottom:1.75rem;padding:1rem 1.25rem;">
+                <h2 style="font-size:.8rem;margin:0 0 .75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;">
+                    Quick Actions
+                </h2>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.65rem;">
+                    <a href="admin-employees.html" class="btn btn-outline" style="justify-content:center;">
+                        <i class="fa-solid fa-user-plus" style="color:#4f46e5;" aria-hidden="true"></i> Add Employee
+                    </a>
+                    <a href="admin-leaves.html" class="btn btn-outline" style="justify-content:center;">
+                        <i class="fa-solid fa-plane-departure" style="color:#10b981;" aria-hidden="true"></i> Approve Leave
+                    </a>
+                    <a href="admin-attendance.html" class="btn btn-outline" style="justify-content:center;">
+                        <i class="fa-solid fa-fingerprint" style="color:#10b981;" aria-hidden="true"></i> Attendance
+                    </a>
+                    <a href="admin-payroll.html" class="btn btn-outline" style="justify-content:center;">
+                        <i class="fa-solid fa-money-bill-wave" style="color:#0ea5e9;" aria-hidden="true"></i> Payroll
+                    </a>
+                    <a href="admin-departments.html" class="btn btn-outline" style="justify-content:center;">
+                        <i class="fa-solid fa-network-wired" style="color:#8b5cf6;" aria-hidden="true"></i> Departments
+                    </a>
+                    <a href="admin-reports.html" class="btn btn-outline" style="justify-content:center;">
+                        <i class="fa-solid fa-chart-pie" style="color:#f59e0b;" aria-hidden="true"></i> Reports
+                    </a>
+                    <a href="admin-settings.html" class="btn btn-outline" style="justify-content:center;">
+                        <i class="fa-solid fa-sliders" style="color:#64748b;" aria-hidden="true"></i> Settings
+                    </a>
+                </div>
+            </section>
+
+            <!-- ── KPI Stats ─────────────────────────────────── -->
+            <section aria-label="Key performance indicators">
+                <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+
+                    <article class="stat-card" aria-label="Total employees">
+                        <div class="stat-info">
+                            <h3 id="stat-total-employees"><span class="skeleton" aria-label="Loading"></span></h3>
+                            <p>Total Employees</p>
+                            <div class="stat-trend trend-up" id="trend-total-employees" aria-live="polite" style="display:none;">
+                                <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Live
+                            </div>
+                        </div>
+                        <div class="stat-icon primary" aria-hidden="true"><i class="fa-solid fa-users"></i></div>
+                    </article>
+
+                    <article class="stat-card" aria-label="Active employees">
+                        <div class="stat-info">
+                            <h3 id="stat-active-employees"><span class="skeleton" aria-label="Loading"></span></h3>
+                            <p>Active Employees</p>
+                            <div class="stat-trend trend-up" id="trend-active-employees" aria-live="polite" style="display:none;">
+                                <i class="fa-solid fa-check-double" aria-hidden="true"></i> Verified
+                            </div>
+                        </div>
+                        <div class="stat-icon primary" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></div>
+                    </article>
+
+                    <article class="stat-card" aria-label="Present today">
+                        <div class="stat-info">
+                            <h3 id="stat-present-today"><span class="skeleton" aria-label="Loading"></span></h3>
+                            <p>Present Today</p>
+                            <div class="stat-trend trend-up" id="trend-present-today" aria-live="polite" style="display:none;">
+                                <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Live
+                            </div>
+                        </div>
+                        <div class="stat-icon success" aria-hidden="true"><i class="fa-solid fa-user-check"></i></div>
+                    </article>
+
+                    <article class="stat-card" aria-label="Employees on leave">
+                        <div class="stat-info">
+                            <h3 id="stat-on-leave"><span class="skeleton" aria-label="Loading"></span></h3>
+                            <p>Employees On Leave</p>
+                            <div class="stat-trend trend-down" id="trend-on-leave" aria-live="polite" style="display:none;">
+                                <i class="fa-solid fa-bed" aria-hidden="true"></i> Away
+                            </div>
+                        </div>
+                        <div class="stat-icon warning" aria-hidden="true"><i class="fa-solid fa-bed"></i></div>
+                    </article>
+
+                    <article class="stat-card" aria-label="Monthly payroll">
+                        <div class="stat-info">
+                            <h3 id="stat-monthly-payroll"><span class="skeleton" aria-label="Loading"></span></h3>
+                            <p>Monthly Payroll</p>
+                            <div class="stat-trend trend-up" id="trend-monthly-payroll" aria-live="polite" style="display:none;">
+                                <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Processing
+                            </div>
+                        </div>
+                        <div class="stat-icon info" aria-hidden="true"><i class="fa-solid fa-money-bills"></i></div>
+                    </article>
+
+                    <article class="stat-card" aria-label="Pending leave requests">
+                        <div class="stat-info">
+                            <h3 id="stat-pending-leaves"><span class="skeleton" aria-label="Loading"></span></h3>
+                            <p>Pending Leave Requests</p>
+                            <div class="stat-trend trend-down" id="trend-pending-leaves" aria-live="polite" style="display:none;">
+                                <i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i> Pending
+                            </div>
+                        </div>
+                        <div class="stat-icon warning" aria-hidden="true"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    </article>
+
+                </div>
+            </section>
+
+            <!-- ── Employee Analytics ─────────────────────────── -->
+            <section aria-label="Employee analytics" style="margin-top:2rem;">
+                <div class="page-title" style="margin-bottom:1.25rem;">
+                    <div>
+                        <h2>Employee Analytics</h2>
+                        <p style="color:var(--text-muted);font-size:.875rem;margin-top:.2rem;">
+                            Real-time workforce demographics, growth &amp; department metrics.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="charts-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-bottom:1.75rem;">
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Employees by Department</h3>
+                        </div>
+                        <div class="chart-container" style="height:250px;">
+                            <canvas id="deptDistributionChart" role="img" aria-label="Doughnut chart showing department distribution"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Employees by Gender</h3>
+                        </div>
+                        <div class="chart-container" style="height:250px;">
+                            <canvas id="genderChart" role="img" aria-label="Pie chart showing gender breakdown"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Employee Growth</h3>
+                        </div>
+                        <div class="chart-container" style="height:250px;">
+                            <canvas id="growthChart" role="img" aria-label="Area chart showing cumulative headcount growth"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>New Hires This Month</h3>
+                        </div>
+                        <div class="chart-container" style="height:250px;">
+                            <canvas id="newEmployeesChart" role="img" aria-label="Bar chart showing new hires by department"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ── Attendance & Department Overview Charts ─────── -->
+            <section aria-label="Attendance and department overview" style="margin-bottom:1.75rem;">
+                <div class="charts-grid">
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Attendance Trends — Last 7 Days</h3>
+                        </div>
+                        <div class="chart-container" style="height:250px;">
+                            <canvas id="attendanceChart" role="img" aria-label="Line chart showing attendance over the past 7 days"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Department Distribution</h3>
+                        </div>
+                        <div class="chart-container" style="height:250px;">
+                            <canvas id="deptChart" role="img" aria-label="Doughnut chart showing headcount per department"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ── Activities & Calendar ──────────────────────── -->
+            <section aria-label="Recent activities and calendar"
+                     style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem;align-items:start;margin-bottom:2rem;">
+
+                <!-- Recent Activities -->
+                <div class="table-card" style="margin-bottom:0;">
+                    <div class="table-header">
+                        <h3>Recent System Activities</h3>
+                        <button id="refresh-activities-btn" class="btn btn-outline"
+                                style="padding:.3rem .75rem;font-size:.75rem;"
+                                aria-label="Refresh activities feed">
+                            <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="recent-activities-list"
+                         role="feed"
+                         aria-label="Recent system activities"
+                         aria-live="polite"
+                         style="display:flex;flex-direction:column;gap:.65rem;padding:.75rem 0;max-height:420px;overflow-y:auto;">
+                        <!-- Loading state -->
+                        <div class="empty-state" aria-label="Loading activities">
+                            <i class="fa-solid fa-circle-notch fa-spin" aria-hidden="true"></i>
+                            <p>Loading latest activities…</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar -->
+                <div class="table-card" style="margin-bottom:0;">
+                    <div class="table-header" style="padding-bottom:.5rem;border-bottom:1px solid var(--border-color);margin-bottom:.75rem;">
+                        <h3 id="calendar-month-year" aria-live="polite" aria-atomic="true">Loading…</h3>
+                        <div style="display:flex;gap:.4rem;" role="group" aria-label="Calendar navigation">
+                            <button id="calendar-prev-btn" class="btn btn-outline"
+                                    style="padding:.25rem .5rem;font-size:.75rem;"
+                                    aria-label="Previous month">
+                                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                            </button>
+                            <button id="calendar-next-btn" class="btn btn-outline"
+                                    style="padding:.25rem .5rem;font-size:.75rem;"
+                                    aria-label="Next month">
+                                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Weekday headers -->
+                    <div role="row"
+                         style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-weight:600;font-size:.72rem;color:var(--text-muted);margin-bottom:.4rem;padding-bottom:.25rem;border-bottom:1px dashed var(--border-color);">
+                        <div role="columnheader" aria-label="Monday">M</div>
+                        <div role="columnheader" aria-label="Tuesday">T</div>
+                        <div role="columnheader" aria-label="Wednesday">W</div>
+                        <div role="columnheader" aria-label="Thursday">T</div>
+                        <div role="columnheader" aria-label="Friday">F</div>
+                        <div role="columnheader" aria-label="Saturday">S</div>
+                        <div role="columnheader" aria-label="Sunday">S</div>
+                    </div>
+
+                    <!-- Days grid (populated by JS) -->
+                    <div id="calendar-days-grid"
+                         role="grid"
+                         aria-label="Calendar days"
+                         style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;">
+                    </div>
+
+                    <!-- Event details panel -->
+                    <div id="calendar-event-details"
+                         aria-live="polite"
+                         style="margin-top:.875rem;padding:.65rem;border-radius:10px;background:var(--bg-main);border:1px solid var(--border-color);font-size:.8rem;">
+                        <p style="margin:0;font-weight:600;color:var(--text-main);" id="calendar-event-date">
+                            Select a day to view events
+                        </p>
+                        <ul id="calendar-event-list"
+                            aria-label="Events for selected date"
+                            style="margin:.35rem 0 0;padding-left:1rem;color:var(--text-muted);line-height:1.6;max-height:90px;overflow-y:auto;">
+                            <li>No events scheduled.</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </section>
+        </div><!-- /content-wrapper -->
+    </main>
+</div><!-- /dashboard-layout -->
+
+<!-- ── Scripts ──────────────────────────────────────────────── -->
+<script type="module">
+    import { checkAuthState }     from './js/auth.js';
+    import { initAdminDashboard } from './js/admin.js';
+    import './js/app.js';
+
+    // ── Live clock ────────────────────────────────────────────
+    const clockEl = document.getElementById('live-clock');
+    const tickClock = () => {
+        const now = new Date();
+        if (clockEl) {
+            clockEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            clockEl.setAttribute('datetime', now.toISOString());
+        }
+    };
+    tickClock();
+    setInterval(tickClock, 1000);
+
+    // ── Init dashboard ────────────────────────────────────────
+    const bootstrap = () => {
+        initAdminDashboard();
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootstrap);
+    } else {
+        bootstrap();
+    }
+
+    // Auth guard (non-blocking)
+    checkAuthState('admin');
+</script>
+
+<!-- Pulse animation for live dot -->
+<style>
+@keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:.5; transform:scale(1.3); }
+}
+</style>
+
+</body>
+</html>

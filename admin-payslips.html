@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CBK INFOTECH HRMS - A professional, highly scalable Human Resource Management System.">
+    <title>Employee Payslips - Admin - CBK INFOTECH</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <style>
+        /* Print Styles for Payslip Modal */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #payslip-print-area, #payslip-print-area * {
+                visibility: visible;
+            }
+            #payslip-print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                color: black !important;
+                padding: 2rem !important;
+                border: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="dashboard-page">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="images/logo.jpg" alt="CBK Logo" class="brand-logo-img mr-2">
+                <h2>CBK INFOTECH</h2>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="admin-dashboard.html" class="menu-item"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                <a href="admin-employees.html" class="menu-item"><i class="fa-solid fa-users"></i> Employees</a>
+                <a href="admin-attendance.html" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Attendance</a>
+                <a href="admin-leaves.html" class="menu-item"><i class="fa-solid fa-bed"></i> Leave Requests</a>
+                <a href="admin-payroll.html" class="menu-item"><i class="fa-solid fa-money-check-dollar"></i> Payroll</a>
+                <a href="admin-payslips.html" class="menu-item active"><i class="fa-solid fa-file-invoice"></i> Payslips</a>
+                <a href="admin-reports.html" class="menu-item"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+                <a href="admin-settings.html" class="menu-item"><i class="fa-solid fa-gear"></i> Settings</a>
+                <a href="admin-departments.html" class="menu-item"><i class="fa-solid fa-building"></i> Departments</a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="btn btn-outline" style="width: 100%; border-radius: 8px;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn icon-btn" style="display: none;"><i class="fa-solid fa-bars"></i></button>
+                    <div style="font-weight: 500; font-size: 1.125rem;">Employee Payslips</div>
+                </div>
+                
+                <div class="header-right">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Dark/Light Mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+                        <div class="user-info">
+                            <p>Admin User</p>
+                            <span>HR Director</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <!-- Filters and Controls -->
+                <div class="table-card" style="margin-bottom: 2rem;">
+                    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <label for="month-year-filter" style="font-weight: 500; color: var(--text-muted);">Month:</label>
+                                <input type="month" id="month-year-filter" class="form-control" style="width: auto; background: var(--bg-main);">
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <label for="search-input" style="font-weight: 500; color: var(--text-muted);">Search:</label>
+                                <input type="text" id="search-input" class="form-control" placeholder="Search by name..." style="width: 200px; background: var(--bg-main);">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payslips List -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3>Processed Payslips</h3>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Department</th>
+                                    <th>Month</th>
+                                    <th>Basic Salary</th>
+                                    <th>Net Salary</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payslips-table-body">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 2rem;">
+                                        <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Payslip View Modal -->
+    <div id="payslip-modal" class="modal">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header no-print">
+                <h2>Payslip Details</h2>
+                <button id="close-modal-btn" class="close-modal">&times;</button>
+            </div>
+            
+            <div id="payslip-print-area" style="font-family: 'Inter', sans-serif; color: var(--text-main); border: 1px solid var(--border-color); padding: 2rem; border-radius: 12px; background: var(--bg-card);">
+                <!-- Header / Brand -->
+                <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--primary); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <h2 style="color: var(--primary); margin: 0; font-size: 1.5rem; font-weight: 700;">CBK INFOTECH</h2>
+                        <p style="color: var(--text-muted); margin: 0.25rem 0 0 0; font-size: 0.85rem;">Empowering the modern enterprise.</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-main);">PAYSLIP</h3>
+                        <p id="payslip-month" style="margin: 0.25rem 0 0 0; font-weight: 600; color: var(--text-muted); font-size: 0.9rem;">October 2026</p>
+                    </div>
+                </div>
+
+                <!-- Info Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.6;">
+                    <div>
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 0.95rem; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.25rem;">Employee Details</h4>
+                        <p style="margin: 0;"><strong>Name:</strong> <span id="payslip-emp-name">John Doe</span></p>
+                        <p style="margin: 0;"><strong>Email:</strong> <span id="payslip-emp-email">john@cbkinfotech.com</span></p>
+                        <p style="margin: 0;"><strong>Department:</strong> <span id="payslip-emp-dept">Engineering</span></p>
+                        <p style="margin: 0;"><strong>Role:</strong> <span id="payslip-emp-role">Software Engineer</span></p>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 0.95rem; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.25rem;">Payment Reference</h4>
+                        <p style="margin: 0;"><strong>Reference:</strong> <span id="payslip-ref">CBK-PS-2026-9812</span></p>
+                        <p style="margin: 0;"><strong>Status:</strong> <span class="badge badge-success" style="font-size: 0.75rem;">PAID</span></p>
+                        <p style="margin: 0;"><strong>Processed:</strong> <span id="payslip-date">2026-10-25</span></p>
+                    </div>
+                </div>
+
+                <!-- Earnings & Deductions Tables -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                    <!-- Earnings -->
+                    <div>
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 0.95rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;">Earnings</h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 0.5rem 0; color: var(--text-muted);">Basic Salary</td>
+                                <td id="payslip-val-basic" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.5rem 0; color: var(--text-muted);">HRA</td>
+                                <td id="payslip-val-hra" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.5rem 0; color: var(--text-muted);">Allowances</td>
+                                <td id="payslip-val-allowances" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.5rem 0; color: var(--text-muted);">Bonus</td>
+                                <td id="payslip-val-bonus" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                            </tr>
+                            <tr style="border-top: 1px solid var(--border-color); font-weight: 600;">
+                                <td style="padding: 0.5rem 0; color: var(--text-main);">Gross Earnings</td>
+                                <td id="payslip-val-gross" style="padding: 0.5rem 0; text-align: right; color: var(--text-main);">$0.00</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <!-- Deductions -->
+                    <div>
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 0.95rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;">Deductions</h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 0.5rem 0; color: var(--text-muted);">Provident Fund (PF)</td>
+                                <td id="payslip-val-pf" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.5rem 0; color: var(--text-muted);">Tax</td>
+                                <td id="payslip-val-tax" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.5rem 0; color: var(--text-muted);">Other Deductions</td>
+                                <td id="payslip-val-other" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                            </tr>
+                            <tr style="border-top: 1px solid var(--border-color); font-weight: 600;">
+                                <td style="padding: 0.5rem 0; color: var(--text-main);">Total Deductions</td>
+                                <td id="payslip-val-deductions" style="padding: 0.5rem 0; text-align: right; color: var(--text-main);">$0.00</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Total Payable Card -->
+                <div style="background: var(--hover-bg); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--primary); display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem; font-weight: 500;">NET PAYABLE AMOUNT</p>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--text-muted);">Rounded net salary amount</p>
+                    </div>
+                    <h2 id="payslip-val-net" style="margin: 0; color: var(--primary); font-size: 1.8rem; font-weight: 700;">$0.00</h2>
+                </div>
+            </div>
+
+            <div class="action-btns no-print" style="margin-top: 1.5rem;">
+                <button type="button" id="close-modal-footer-btn" class="btn btn-outline">Close</button>
+                <button type="button" id="print-payslip-btn" class="btn btn-primary"><i class="fa-solid fa-print mr-2"></i> Print Payslip</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { checkAuthState, logoutUser } from './js/auth.js';
+        import { initAdminPayslips } from './js/admin-payslips.js';
+        import './js/app.js';
+
+        const init = () => {
+            initAdminPayslips();
+
+            // Logout button
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    logoutUser();
+                });
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Protect route
+        checkAuthState('admin');
+    </script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CBK INFOTECH HRMS - A professional, highly scalable Human Resource Management System.">
+    <meta name="keywords" content="HRMS, HR, CBK INFOTECH, Employee Management, Payroll, Attendance">
+    <meta name="author" content="CBK INFOTECH">
+    <meta property="og:title" content="CBK INFOTECH HRMS">
+    <meta property="og:description" content="Manage your workforce efficiently.">
+    <title>Employee Dashboard - CBK INFOTECH</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/employee.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body class="dashboard-page">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="images/logo.jpg" alt="CBK Logo" class="brand-logo-img mr-2">
+                <h2>CBK INFOTECH</h2>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="employee-dashboard.html" class="menu-item active"><i class="fa-solid fa-border-all"></i> Dashboard</a>
+                <a href="employee-profile.html" class="menu-item"><i class="fa-solid fa-user"></i> Profile</a>
+                <a href="employee-dashboard.html#attendance-section" class="menu-item"><i class="fa-solid fa-clock-rotate-left"></i> Attendance</a>
+                <a href="employee-leaves.html" class="menu-item"><i class="fa-solid fa-bed"></i> Leaves</a>
+                <a href="employee-payslips.html" class="menu-item"><i class="fa-solid fa-file-invoice-dollar"></i> Payslips</a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="btn btn-outline" style="width: 100%; border-radius: 8px;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Navigation -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn icon-btn" style="display: none;"><i class="fa-solid fa-bars"></i></button>
+                    <div style="font-weight: 500; font-size: 1.125rem;">Employee Workspace</div>
+                </div>
+                
+                <div class="header-right" style="display: flex; align-items: center;">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Dark/Light Mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar" style="background: linear-gradient(135deg, #10b981, #34d399);"><i class="fa-solid fa-user"></i></div>
+                        <div class="user-info">
+                            <p>John Doe</p>
+                            <span>Software Engineer</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="page-title">
+                    <div>
+                        <h1>My Dashboard</h1>
+                        <p id="current-date" style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.25rem;">Wednesday, October 24, 2026</p>
+                    </div>
+                </div>
+
+                <!-- Action Cards: Punch In / Out -->
+                <div id="attendance-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    
+                    <!-- Punch In/Out Card -->
+                    <div class="stat-card" style="flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem;">
+                        <h3 style="margin-bottom: 1rem; color: var(--text-main);">Current Status</h3>
+                        <div id="status-badge" class="badge badge-warning" style="font-size: 1rem; padding: 0.5rem 1rem; margin-bottom: 1.5rem;">Not Punched In</div>
+                        <div style="display: flex; gap: 1rem; width: 100%;">
+                            <button id="punch-in-btn" class="btn btn-primary" style="flex: 1; font-weight: 600;"><i class="fa-solid fa-fingerprint mr-2"></i> Punch In</button>
+                            <button id="punch-out-btn" class="btn btn-outline" style="flex: 1; font-weight: 600;" disabled><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Punch Out</button>
+                        </div>
+                    </div>
+
+                    <!-- Today's Attendance Summary -->
+                    <div class="stat-card" style="flex-direction: column; padding: 2rem;">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--text-main);">Today's Attendance</h3>
+                        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.75rem;">
+                            <span style="color: var(--text-muted);">Check In:</span>
+                            <span id="check-in-time" style="font-weight: 600; color: var(--text-main);">--:-- AM</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.75rem;">
+                            <span style="color: var(--text-muted);">Check Out:</span>
+                            <span id="check-out-time" style="font-weight: 600; color: var(--text-main);">--:-- PM</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.75rem;">
+                            <span style="color: var(--text-muted);">Working Hours:</span>
+                            <span id="total-hours" style="font-weight: 600; color: var(--primary);">0h 0m</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.75rem;">
+                            <span style="color: var(--text-muted);">Overtime:</span>
+                            <span id="today-overtime" style="font-weight: 600; color: #10b981;">0h 0m</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <span style="color: var(--text-muted);">Attendance Status:</span>
+                            <span id="today-status" style="font-weight: 600; color: var(--text-main);">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid (Working Hours, Leaves, Payslips, Profile) -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3><i class="fa-solid fa-circle-notch fa-spin"></i></h3>
+                            <p>Working Hours (Month)</p>
+                            <div class="stat-trend text-muted">Calculating...</div>
+                        </div>
+                        <div class="stat-icon primary"><i class="fa-solid fa-stopwatch"></i></div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3><i class="fa-solid fa-circle-notch fa-spin"></i></h3>
+                            <p>Leave Balance</p>
+                            <div class="stat-trend text-muted">Loading...</div>
+                        </div>
+                        <div class="stat-icon warning"><i class="fa-solid fa-umbrella-beach"></i></div>
+                    </div>
+                    
+                    <div class="stat-card" style="cursor: pointer;">
+                        <div class="stat-info">
+                            <h3><i class="fa-solid fa-circle-notch fa-spin"></i></h3>
+                            <p>Latest Payslip</p>
+                            <div class="stat-trend text-muted">Loading...</div>
+                        </div>
+                        <div class="stat-icon success"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                    </div>
+
+                    <div class="stat-card" style="cursor: pointer;">
+                        <div class="stat-info">
+                            <h3><i class="fa-solid fa-circle-notch fa-spin"></i></h3>
+                            <p>Profile Completion</p>
+                            <div class="stat-trend text-muted">Calculating...</div>
+                        </div>
+                        <div class="stat-icon info"><i class="fa-solid fa-address-card"></i></div>
+                    </div>
+                </div>
+
+                <!-- Split Section: Recent Activity & Notifications -->
+                <div class="charts-grid">
+                    <!-- Recent Activity -->
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3>Recent Activity</h3>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Activity</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; padding: 2rem;">
+                                            <i class="fa-solid fa-circle-notch fa-spin"></i> Syncing activities...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3>Notifications</h3>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                                <i class="fa-solid fa-circle-notch fa-spin"></i> Syncing notifications...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { checkAuthState } from './js/auth.js';
+        import { initEmployeeDashboard } from './js/employee.js';
+        import './js/app.js';
+
+        const init = () => {
+            initEmployeeDashboard();
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Protect route (non-blocking)
+        checkAuthState('employee');
+    </script>
+</body>
+</html>
+
+

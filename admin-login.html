@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="js/suppress-warnings.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CBK INFOTECH HRMS - A professional, highly scalable Human Resource Management System.">
+    <meta name="keywords" content="HRMS, HR, CBK INFOTECH, Employee Management, Payroll, Attendance">
+    <meta name="author" content="CBK INFOTECH">
+    <meta property="og:title" content="CBK INFOTECH HRMS">
+    <meta property="og:description" content="Manage your workforce efficiently.">
+    <title>Admin Login - CBK INFOTECH</title>
+    <link rel="icon" type="image/jpeg" href="images/logo.jpg">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <style>
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gray-700);
+        }
+        .forgot-password {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        .success-message {
+            color: var(--secondary);
+            font-size: 0.875rem;
+            margin-top: 0.75rem;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body class="auth-page">
+    <div class="login-wrapper">
+        <div class="login-card glass">
+            <div class="brand-logo">
+                <div class="login-option-icon" style="margin: 0 auto 1rem; width: 64px; height: 64px; font-size: 2rem;">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <h2>Admin Portal</h2>
+                <p>Login to manage HRMS</p>
+            </div>
+            
+            <form id="admin-login-form" class="auth-form" novalidate>
+                <div class="form-group" id="signup-fields" style="display: none;">
+                    <label class="form-label" for="full-name">Full Name</label>
+                    <input type="text" id="full-name" class="form-control" placeholder="John Doe">
+                    
+                    <label class="form-label" for="dob" style="margin-top: 15px; display: block;">Date of Birth</label>
+                    <input type="date" id="dob" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="admin@cbkinfotech.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                        <i class="fa-regular fa-eye password-toggle" onclick="togglePassword('password', this)"></i>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="confirm-password-group" style="display: none;">
+                    <label class="form-label" for="confirm-password">Confirm Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirm-password" class="form-control" placeholder="••••••••">
+                        <i class="fa-regular fa-eye password-toggle" onclick="togglePassword('confirm-password', this)"></i>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="remember-me"> Remember Me
+                    </label>
+                    <a href="#" id="forgot-password-link" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <div id="error-msg" class="error-message"></div>
+                <div id="success-msg" class="success-message"></div>
+                
+                <button type="submit" id="submit-btn" class="btn btn-primary btn-block">Sign In</button>
+
+                <div class="auth-divider">or continue with</div>
+                <button type="button" id="google-login-btn" class="btn-google">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width: 20px;">
+                    Sign in with Google
+                </button>
+
+                <div class="auth-toggle-link">
+                    <span id="auth-toggle-text">Don't have an account? </span>
+                    <a href="#" id="auth-toggle-btn">Sign Up</a>
+                </div>
+            </form>
+            
+            <div class="text-center mt-4">
+                <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.togglePassword = function(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        };
+    </script>
+    <script type="module">
+        import { loginUser, resetPassword, loginWithGoogle, registerUser } from './js/auth.js';
+        
+        const form = document.getElementById('admin-login-form');
+        const emailInput = document.getElementById('email');
+        const fullNameInput = document.getElementById('full-name');
+        const dobInput = document.getElementById('dob');
+        const signupFields = document.getElementById('signup-fields');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordGroup = document.getElementById('confirm-password-group');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const rememberMeInput = document.getElementById('remember-me');
+        const formOptions = document.querySelector('.form-options');
+        const errorMsg = document.getElementById('error-msg');
+        const successMsg = document.getElementById('success-msg');
+        const submitBtn = document.getElementById('submit-btn');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const googleLoginBtn = document.getElementById('google-login-btn');
+        const authToggleBtn = document.getElementById('auth-toggle-btn');
+        const authToggleText = document.getElementById('auth-toggle-text');
+        const formTitle = document.querySelector('.brand-logo p');
+
+        let isLoginMode = true;
+
+        // Restrict DOB to at least 16 years ago
+        const maxDate = new Date();
+        maxDate.setFullYear(maxDate.getFullYear() - 16);
+        if(dobInput) {
+            dobInput.max = maxDate.toISOString().split('T')[0];
+        }
+
+        // Toggle Auth Mode
+        authToggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            isLoginMode = !isLoginMode;
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            
+            if (isLoginMode) {
+                formTitle.textContent = 'Login to manage HRMS';
+                confirmPasswordGroup.style.display = 'none';
+                signupFields.style.display = 'none';
+                formOptions.style.display = 'flex';
+                submitBtn.innerHTML = 'Sign In';
+                authToggleText.textContent = "Don't have an account? ";
+                authToggleBtn.textContent = "Sign Up";
+            } else {
+                formTitle.textContent = 'Create a new admin account';
+                confirmPasswordGroup.style.display = 'block';
+                signupFields.style.display = 'block';
+                formOptions.style.display = 'none';
+                submitBtn.innerHTML = 'Sign Up';
+                authToggleText.textContent = "Already have an account? ";
+                authToggleBtn.textContent = "Sign In";
+            }
+        });
+
+        // Handle Form Submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset messages
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const rememberMe = rememberMeInput.checked;
+
+            // Input Validation
+            if (!email || !password) {
+                errorMsg.textContent = "Please fill in all fields.";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            if (!isLoginMode) {
+                const confirmPassword = confirmPasswordInput.value;
+                if (password !== confirmPassword) {
+                    errorMsg.textContent = "Passwords do not match.";
+                    errorMsg.style.display = 'block';
+                    return;
+                }
+                const fullName = fullNameInput.value.trim();
+                const dob = dobInput.value;
+                if (!fullName || !dob) {
+                    errorMsg.textContent = "Please fill in all fields.";
+                    errorMsg.style.display = 'block';
+                    return;
+                }
+            }
+
+            // Show Loading Animation
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Authenticating...';
+            submitBtn.disabled = true;
+            
+            try {
+                if (isLoginMode) {
+                    await loginUser(email, password, rememberMe, 'admin');
+                } else {
+                    await registerUser(email, password, 'admin', fullNameInput.value.trim(), dobInput.value);
+                }
+                // Success: Redirect handles in auth.js
+            } catch (error) {
+                // Show Error
+                errorMsg.textContent = error.message;
+                errorMsg.style.display = 'block';
+                // Reset Button
+                submitBtn.innerHTML = isLoginMode ? 'Sign In' : 'Sign Up';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Handle Google Login
+        googleLoginBtn.addEventListener('click', async () => {
+            errorMsg.style.display = 'none';
+            try {
+                await loginWithGoogle('admin');
+            } catch (error) {
+                errorMsg.textContent = error.message;
+                errorMsg.style.display = 'block';
+            }
+        });
+
+        // Handle Forgot Password
+        forgotPasswordLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                errorMsg.textContent = "Please enter your email address first to reset password.";
+                errorMsg.style.display = 'block';
+                emailInput.focus();
+                return;
+            }
+
+            try {
+                const message = await resetPassword(email);
+                successMsg.textContent = message;
+                successMsg.style.display = 'block';
+            } catch (error) {
+                errorMsg.textContent = error.message;
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+
+
