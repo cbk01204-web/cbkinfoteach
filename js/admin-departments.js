@@ -28,7 +28,7 @@ export const initAdminDepartments = async () => {
             const empSnap = await getDocs(collection(db, "employees"));
             employeesList = [];
             empSnap.forEach(d => {
-                if (!d.id.startsWith('__config_')) {
+                if (!d.id.startsWith('config_')) {
                     employeesList.push({ id: d.id, ...d.data() });
                 }
             });
@@ -52,7 +52,7 @@ export const initAdminDepartments = async () => {
             // Fetch departments from employees/__config_departments__
             DEPARTMENTS = [];
             try {
-                const configDocRef = doc(db, "employees", "__config_departments__");
+                const configDocRef = doc(db, "employees", "config_departments");
                 const docSnap = await getDoc(configDocRef);
                 if (docSnap.exists() && docSnap.data().list) {
                     DEPARTMENTS = docSnap.data().list;
@@ -191,7 +191,7 @@ export const initAdminDepartments = async () => {
                 showCustomConfirm(`Are you sure you want to delete the "${deptName}" department? This action cannot be undone.`, async () => {
                     try {
                         const updatedDepts = DEPARTMENTS.filter(d => d.id !== deptId);
-                        const configDocRef = doc(db, "employees", "__config_departments__");
+                        const configDocRef = doc(db, "employees", "config_departments");
                         await setDoc(configDocRef, { list: updatedDepts });
 
                         import('./utils.js').then(m => m.showToast("Department deleted successfully.", "success"));
@@ -298,7 +298,7 @@ export const initAdminDepartments = async () => {
                     color
                 };
                 const updatedDepts = [...DEPARTMENTS, newDept];
-                const configDocRef = doc(db, "employees", "__config_departments__");
+                const configDocRef = doc(db, "employees", "config_departments");
                 await setDoc(configDocRef, { list: updatedDepts });
 
                 import('./utils.js').then(m => m.showToast("Department added successfully.", "success"));

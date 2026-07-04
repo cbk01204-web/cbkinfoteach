@@ -160,7 +160,7 @@ const startRealtimeSync = () => {
         }
         target.length = 0;
         snap.forEach(d => {
-            if (!d.id.startsWith('__config_')) {
+            if (!d.id.startsWith('config_')) {
                 target.push({ id: d.id, ...d.data() });
             }
         });
@@ -176,7 +176,7 @@ const startRealtimeSync = () => {
             }
             cacheEmployees = [];
             snap.forEach(d => {
-                if (!d.id.startsWith('__config_')) {
+                if (!d.id.startsWith('config_')) {
                     cacheEmployees.push({ id: d.id, ...d.data() });
                 }
             });
@@ -185,8 +185,8 @@ const startRealtimeSync = () => {
         onSnapshot(collection(db, 'attendance'),   mkHandler(cacheAttendance,  'Attendance')),
         onSnapshot(collection(db, 'leaves'),       mkHandler(cacheLeaves,      'Leaves')),
         onSnapshot(collection(db, 'payroll'),      mkHandler(cachePayroll,     'Payroll')),
-        // Dynamic Holidays from employees/__config_holidays__
-        onSnapshot(doc(db, 'employees', '__config_holidays__'), (snap, err) => {
+        // Dynamic Holidays from employees/config_holidays
+        onSnapshot(doc(db, 'employees', 'config_holidays'), (snap, err) => {
             if (err) {
                 console.warn("[HRMS] holidays listener warning:", err);
                 return;
@@ -641,7 +641,7 @@ const initCalendar = () => {
                                         if (confirm(`Remove holiday "${ev.rawName}"?`)) {
                                             try {
                                                 const updatedHols = cacheHolidays.filter(h => h.id !== ev.id);
-                                                const configDocRef = doc(db, "employees", "__config_holidays__");
+                                                const configDocRef = doc(db, "employees", "config_holidays");
                                                 await setDoc(configDocRef, { list: updatedHols });
                                                 import('./utils.js').then(m => m.showToast("Holiday removed successfully.", "success"));
                                             } catch (err) {
@@ -730,7 +730,7 @@ const initCalendar = () => {
 
                 try {
                     const updatedHols = [...cacheHolidays, newHoliday];
-                    const configDocRef = doc(db, "employees", "__config_holidays__");
+                    const configDocRef = doc(db, "employees", "config_holidays");
                     await setDoc(configDocRef, { list: updatedHols });
 
                     import('./utils.js').then(m => m.showToast("Holiday declared successfully.", "success"));
