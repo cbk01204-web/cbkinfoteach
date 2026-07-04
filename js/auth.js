@@ -63,56 +63,61 @@ export const loginUser = async (email, password, rememberMe, expectedRole) => {
             user = userCredential.user;
         } catch (authError) {
             // Fallback for auto-generated temporary password:
-            // Check if user is present in Firestore 'employees' collection
-            const q = query(collection(db, "employees"), where("email", "==", email));
-            const querySnapshot = await getDocs(q);
-            
-            let matchDoc = null;
-            let oldDocId = null;
-            querySnapshot.forEach(d => {
-                const data = d.data();
-                if (data.tempPassword && data.tempPassword === password) {
-                    matchDoc = data;
-                    oldDocId = d.id;
-                }
-            });
-
-            if (matchDoc) {
-                // Pre-created by admin with this temporary password:
-                // Auto-register in Firebase Auth without logging out current context
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                user = userCredential.user;
-
-                // Sync profile name
-                const fullName = `${matchDoc.firstName || ''} ${matchDoc.lastName || ''}`.trim();
-                if (fullName) {
-                    await updateProfile(user, { displayName: fullName });
-                }
-
-                // Add to 'users' table
-                await setDoc(doc(db, 'users', user.uid), {
-                    email: user.email,
-                    role: 'employee',
-                    fullName: fullName,
-                    dob: matchDoc.dob || '',
-                    updatedAt: new Date().toISOString()
+            try {
+                // Check if user is present in Firestore 'employees' collection
+                const q = query(collection(db, "employees"), where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+                
+                let matchDoc = null;
+                let oldDocId = null;
+                querySnapshot.forEach(d => {
+                    const data = d.data();
+                    if (data.tempPassword && data.tempPassword === password) {
+                        matchDoc = data;
+                        oldDocId = d.id;
+                    }
                 });
 
-                // Write employee record using user.uid as the document ID
-                await setDoc(doc(db, 'employees', user.uid), {
-                    ...matchDoc,
-                    uid: user.uid,
-                    updatedAt: new Date()
-                });
+                if (matchDoc) {
+                    // Pre-created by admin with this temporary password:
+                    // Auto-register in Firebase Auth without logging out current context
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    user = userCredential.user;
 
-                // Clean up old temporary record
-                if (oldDocId && oldDocId !== user.uid) {
-                    await deleteDoc(doc(db, 'employees', oldDocId));
+                    // Sync profile name
+                    const fullName = `${matchDoc.firstName || ''} ${matchDoc.lastName || ''}`.trim();
+                    if (fullName) {
+                        await updateProfile(user, { displayName: fullName });
+                    }
+
+                    // Add to 'users' table
+                    await setDoc(doc(db, 'users', user.uid), {
+                        email: user.email,
+                        role: 'employee',
+                        fullName: fullName,
+                        dob: matchDoc.dob || '',
+                        updatedAt: new Date().toISOString()
+                    });
+
+                    // Write employee record using user.uid as the document ID
+                    await setDoc(doc(db, 'employees', user.uid), {
+                        ...matchDoc,
+                        uid: user.uid,
+                        updatedAt: new Date()
+                    });
+
+                    // Clean up old temporary record
+                    if (oldDocId && oldDocId !== user.uid) {
+                        await deleteDoc(doc(db, 'employees', oldDocId));
+                    }
+
+                    console.log("Pre-registered employee successfully activated on login.");
+                } else {
+                    // No match, throw original auth error
+                    throw authError;
                 }
-
-                console.log("Pre-registered employee successfully activated on login.");
-            } else {
-                // No match, throw original auth error
+            } catch (dbErr) {
+                // If database query fails (due to permissions/offline), fallback to original Auth error
                 throw authError;
             }
         }
