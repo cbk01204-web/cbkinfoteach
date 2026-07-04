@@ -1,7 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import { 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager 
+} from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";
 
 // Your web app's Firebase configuration
@@ -21,7 +25,15 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Services
 export const analytics = getAnalytics(app);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Initialize Firestore with Multi-Tab Offline Cache & Long-Polling enabled
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  }),
+  experimentalForceLongPolling: true
+});
+
 export const storage = getStorage(app);
 
-console.log("🔥 Firebase initialized successfully (v12.15.0 Modular SDK)");
+console.log("🔥 Firebase initialized successfully (v12.15.0 Modular SDK + Offline Persistence)");
