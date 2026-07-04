@@ -516,8 +516,8 @@ const calculateMonthlyHours = (snap) => {
         const trendEl = hoursCard.querySelector('.stat-trend');
         if (trendEl) {
             trendEl.innerHTML = overtimeHours > 0 
-                ? `<i class="fa-solid fa-arrow-trend-up"></i> +${overtimeHours}h overtime`
-                : `<i class="fa-solid fa-check"></i> Standard hours`;
+                ? `<i class="fas fa-arrow-up"></i> +${overtimeHours}h overtime`
+                : `<i class="fas fa-check"></i> Standard hours`;
             trendEl.className = `stat-trend ${overtimeHours > 0 ? 'trend-up' : 'text-muted'}`;
         }
     }
@@ -540,7 +540,7 @@ const calculateAndDisplayLeaves = () => {
 
         if (valEl) valEl.textContent = remaining;
         if (trendEl) {
-            trendEl.innerHTML = `<i class="fa-solid fa-umbrella-beach"></i> ${used} used / ${total} total`;
+            trendEl.innerHTML = `<i class="fas fa-calendar-check"></i> ${used} used / ${total} total`;
             trendEl.className = 'stat-trend text-muted';
         }
     }
@@ -581,8 +581,8 @@ const updateStatsOverview = (emp) => {
         const trendEl = profileCard.querySelector('.stat-trend');
         if (trendEl) {
             trendEl.innerHTML = percentage === 100 
-                ? `<i class="fa-solid fa-check-double"></i> Profile complete`
-                : `<i class="fa-solid fa-pen-to-square"></i> Complete profile details`;
+                ? `<i class="fas fa-check-double"></i> Profile complete`
+                : `<i class="fas fa-edit"></i> Complete profile details`;
             trendEl.className = `stat-trend ${percentage === 100 ? 'trend-up' : 'warning'}`;
         }
     }
