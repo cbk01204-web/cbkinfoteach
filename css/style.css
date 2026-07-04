@@ -251,11 +251,4 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 0 25px rgba(79, 70, 229, 0.9), 0 0 10px rgba(255, 255, 255, 0.4) inset;
 }
 
-/* ── Global FontAwesome Icon Safeguard ── */
-i[class*="fa-"], i.fa-solid, i.fa-regular, i.fa-brands {
-    font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
-    font-weight: 900 !important;
-    font-style: normal;
-    display: inline-block;
-}
 

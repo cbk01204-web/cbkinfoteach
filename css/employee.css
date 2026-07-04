@@ -84,8 +84,6 @@ body.dashboard-page.dark-theme {
 }
 
 .menu-item i {
-  font-family: "Font Awesome 6 Free" !important;
-  font-weight: 900 !important;
   margin-right: 1rem;
   font-size: 1.125rem;
   width: 24px;
