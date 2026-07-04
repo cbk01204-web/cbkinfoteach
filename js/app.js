@@ -52,6 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 5. Inject Global Search UI & Logic
     initGlobalSearch();
+
+    // 6. Inject Network Connection Status Monitor
+    initConnectionMonitor();
 });
 
 const initNotifications = async () => {
@@ -911,5 +914,61 @@ const initProfileDropdown = () => {
             const { logoutUser } = await import('./auth.js');
             await logoutUser();
         });
+    }
+};
+
+const initConnectionMonitor = () => {
+    const handleNetworkChange = (isOnline) => {
+        import('./utils.js').then(({ showToast }) => {
+            let offlinePill = document.getElementById('offline-status-pill');
+            if (!isOnline) {
+                showToast("You are offline. Serving cached data.", "warning");
+                if (!offlinePill) {
+                    offlinePill = document.createElement('div');
+                    offlinePill.id = 'offline-status-pill';
+                    offlinePill.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        z-index: 10000;
+                        background-color: var(--warning);
+                        color: #1e1b4b;
+                        font-weight: 600;
+                        font-size: 0.8rem;
+                        padding: 0.5rem 1rem;
+                        border-radius: 50px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        pointer-events: none;
+                        transition: opacity 0.3s ease;
+                        opacity: 0;
+                    `;
+                    offlinePill.innerHTML = `<i class="fas fa-wifi-slash"></i> Offline Mode (Serving Cache)`;
+                    document.body.appendChild(offlinePill);
+                    requestAnimationFrame(() => offlinePill.style.opacity = '1');
+                }
+            } else {
+                if (offlinePill) {
+                    showToast("Connection restored! Syncing updates...", "success");
+                    offlinePill.style.opacity = '0';
+                    setTimeout(() => {
+                        if (offlinePill && offlinePill.parentNode) {
+                            offlinePill.remove();
+                        }
+                    }, 300);
+                }
+            }
+        }).catch(err => console.error("Failed to load utils module for offline toast:", err));
+    };
+
+    window.addEventListener('online', () => handleNetworkChange(true));
+    window.addEventListener('offline', () => handleNetworkChange(false));
+
+    // Initial check
+    if (!navigator.onLine) {
+        handleNetworkChange(false);
     }
 };

@@ -87,3 +87,27 @@ export const formatCurrency = (amount, currency = 'USD') => {
         currency: currency
     }).format(amount);
 };
+
+/**
+ * Retries a promise-returning function upon failure.
+ * @param {Function} fn - The async function to retry.
+ * @param {number} [retries=3] - Number of retry attempts.
+ * @param {number} [delayMs=1500] - Delay between retries.
+ */
+export const runWithRetry = async (fn, retries = 3, delayMs = 1500) => {
+    let lastErr = null;
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (err) {
+            lastErr = err;
+            const isNetworkErr = !navigator.onLine || err.message?.includes("network") || err.code === "unavailable" || err.message?.includes("failed");
+            if (!isNetworkErr || i === retries - 1) {
+                throw err;
+            }
+            console.warn(`[Firestore] Request failed, retrying in ${delayMs}ms... (Attempt ${i + 1}/${retries})`);
+            await new Promise(res => setTimeout(res, delayMs));
+        }
+    }
+    throw lastErr;
+};

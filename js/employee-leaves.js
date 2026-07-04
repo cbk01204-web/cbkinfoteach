@@ -3,6 +3,7 @@ import {
     collection, getDocs, addDoc, updateDoc, doc, query, where, orderBy, Timestamp 
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+import { runWithRetry } from './utils.js';
 
 export const initEmployeeLeaves = () => {
     console.log("Employee Leaves initialized.");
@@ -59,7 +60,7 @@ export const initEmployeeLeaves = () => {
                         return;
                     }
 
-                    await addDoc(collection(db, "leaves"), leaveData);
+                    await runWithRetry(() => addDoc(collection(db, "leaves"), leaveData));
                     closeModal();
                     fetchMyLeaves(); // refresh
                 } catch (error) {
@@ -82,7 +83,7 @@ export const initEmployeeLeaves = () => {
                     where("userId", "==", userEmail),
                     orderBy("appliedAt", "desc")
                 );
-                const snapshot = await getDocs(q);
+                const snapshot = await runWithRetry(() => getDocs(q));
                 
                 if (snapshot.empty) {
                     tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem;">You have not applied for any leaves.</td></tr>`;
@@ -130,7 +131,7 @@ export const initEmployeeLeaves = () => {
                         if (confirm("Are you sure you want to cancel this leave application?")) {
                             const id = e.target.getAttribute('data-id');
                             try {
-                                await updateDoc(doc(db, "leaves", id), { status: 'Cancelled' });
+                                await runWithRetry(() => updateDoc(doc(db, "leaves", id), { status: 'Cancelled' }));
                                 fetchMyLeaves();
                             } catch(err) {
                                 console.error("Error cancelling leave:", err);
@@ -143,7 +144,7 @@ export const initEmployeeLeaves = () => {
                 console.error("Error fetching leaves:", error);
                 // Fallback if missing index
                 try {
-                    const snapshot = await getDocs(query(collection(db, "leaves"), where("userId", "==", userEmail)));
+                    const snapshot = await runWithRetry(() => getDocs(query(collection(db, "leaves"), where("userId", "==", userEmail))));
                     const docs = [];
                     snapshot.forEach(d => docs.push({id: d.id, ...d.data()}));
                     docs.sort((a,b) => {

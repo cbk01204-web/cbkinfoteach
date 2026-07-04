@@ -9,10 +9,10 @@
  *  - notifications→ Live user notifications list
  */
 
-import { showToast } from './utils.js';
+import { showToast, runWithRetry } from './utils.js';
 import { db, auth } from './firebase-config.js';
 import { 
-    collection, addDoc, updateDoc, setDoc, doc, query, where, Timestamp, onSnapshot, orderBy, limit
+    collection, addDoc, updateDoc, setDoc, getDoc, doc, query, where, Timestamp, onSnapshot, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 import { createNotification } from './notifications.js';
@@ -348,10 +348,10 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
 
                         const totalBreakHours = (data.breakTime || 0) + breakHours;
 
-                        await updateDoc(doc(db, "attendance", activeDocId), {
+                        await runWithRetry(() => updateDoc(doc(db, "attendance", activeDocId), {
                             breaks: breaks,
                             breakTime: totalBreakHours
-                        });
+                        }));
                         showToast("Break ended, back to work!");
                     } catch (err) {
                         console.error("Error ending break:", err);
@@ -362,9 +362,9 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
                     breakBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Starting Break...';
                     try {
                         const updatedBreaks = [...breaks, { start: Timestamp.fromDate(now), end: null }];
-                        await updateDoc(doc(db, "attendance", activeDocId), {
+                        await runWithRetry(() => updateDoc(doc(db, "attendance", activeDocId), {
                             breaks: updatedBreaks
-                        });
+                        }));
                         showToast("Break started. Enjoy!");
                     } catch (err) {
                         console.error("Error starting break:", err);
@@ -405,7 +405,7 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
             shiftStart.setHours(9, 15, 0); // Late threshold
             const isLate = now > shiftStart;
 
-            await addDoc(collection(db, "attendance"), {
+            await runWithRetry(() => addDoc(collection(db, "attendance"), {
                 userId: userEmail,
                 date: dateString,
                 punchIn: Timestamp.fromDate(now),
@@ -416,7 +416,7 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
                 breaks: [],
                 overtimeHours: 0,
                 isEarlyExit: false
-            });
+            }));
             showToast("Punched in successfully!");
         } catch (err) {
             console.error("Error punching in:", err);
@@ -438,7 +438,7 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
             let workingHours = diffMs / (1000 * 60 * 60);
 
             // Subtract total break time
-            const docSnap = await getDoc(doc(db, "attendance", activeDocId));
+            const docSnap = await runWithRetry(() => getDoc(doc(db, "attendance", activeDocId)));
             const freshData = docSnap.exists() ? docSnap.data() : {};
             const breakTime = freshData.breakTime || 0;
             workingHours = Math.max(0, workingHours - breakTime);
@@ -448,12 +448,12 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
             const isEarlyExit = now < shiftEnd;
             const overtimeHours = workingHours > 8 ? workingHours - 8 : 0;
 
-            await updateDoc(doc(db, "attendance", activeDocId), {
+            await runWithRetry(() => updateDoc(doc(db, "attendance", activeDocId), {
                 punchOut: Timestamp.fromDate(now),
                 workingHours: workingHours,
                 overtimeHours: overtimeHours,
                 isEarlyExit: isEarlyExit
-            });
+            }));
             showToast("Punched out successfully!");
         } catch (err) {
             console.error("Error punching out:", err);
