@@ -14,7 +14,8 @@ import {
     createUserWithEmailAndPassword,
     updateProfile,
     fetchSignInMethodsForEmail,
-    getAuth
+    getAuth,
+    updatePassword
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
@@ -260,16 +261,74 @@ export const logoutUser = async () => {
     }
 };
 
-// Forgot Password Function
+// Forgot Password Function (Bypasses email verification by prompting for a new password and resetting it using the current database credentials)
 export const resetPassword = async (email) => {
     if (!email) {
         throw new Error("Please enter your email address first.");
     }
+
+    const newPassword = prompt(`Enter new password for ${email} (minimum 6 characters):`);
+    if (!newPassword) {
+        throw new Error("Password reset cancelled.");
+    }
+    if (newPassword.trim().length < 6) {
+        throw new Error("Password must be at least 6 characters long.");
+    }
+
+    const trimmedEmail = email.trim();
+    const cleanNewPassword = newPassword.trim();
+
+    // 1. Check in employees collection for matching email (public readable lookup)
+    const employeesQuery = query(collection(db, "employees"), where("email", "==", trimmedEmail));
+    const employeesSnap = await getDocs(employeesQuery);
+
+    let currentTempPassword = null;
+    let employeeDocId = null;
+    let userDocId = null;
+
+    if (!employeesSnap.empty) {
+        const empDoc = employeesSnap.docs[0];
+        employeeDocId = empDoc.id;
+        currentTempPassword = empDoc.data().tempPassword;
+    }
+
+    // 2. Check in users collection if not found in employees
+    if (!currentTempPassword) {
+        const usersQuery = query(collection(db, "users"), where("email", "==", trimmedEmail));
+        const usersSnap = await getDocs(usersQuery);
+        if (!usersSnap.empty) {
+            const userDoc = usersSnap.docs[0];
+            userDocId = userDoc.id;
+            currentTempPassword = userDoc.data().tempPassword;
+        }
+    }
+
+    if (!currentTempPassword) {
+        throw new Error("No record of temporary/current password found in database. Contact Admin to reset.");
+    }
+
     try {
-        await sendPasswordResetEmail(auth, email);
-        return "Password reset email sent! Check your inbox.";
-    } catch (error) {
-        throw new Error(getErrorMessage(error));
+        // 3. Log in under the hood using the old password from Firestore
+        const userCredential = await signInWithEmailAndPassword(auth, trimmedEmail, currentTempPassword);
+        const user = userCredential.user;
+
+        // 4. Update password in Firebase Authentication
+        await updatePassword(user, cleanNewPassword);
+
+        // 5. Update password in Firestore documents
+        if (employeeDocId) {
+            await setDoc(doc(db, 'employees', employeeDocId), { tempPassword: cleanNewPassword }, { merge: true });
+        }
+        // Also update users collection mapping
+        await setDoc(doc(db, 'users', user.uid), { tempPassword: cleanNewPassword }, { merge: true });
+
+        // 6. Sign the user out to finalize the reset
+        await signOut(auth);
+
+        return "Password successfully updated! You can now log in with your new password.";
+    } catch (err) {
+        console.error("Forgot password reset routine failed:", err);
+        throw new Error("Failed to reset password: " + (err.message || err));
     }
 };
 

@@ -116,6 +116,13 @@ export const initAdminSettings = async () => {
         try {
             if (auth.currentUser) {
                 await updatePassword(auth.currentUser, pwd);
+                // Keep tempPassword in Firestore synced to support Forgot Password flow
+                try {
+                    const userRef = doc(db, 'users', auth.currentUser.uid);
+                    await setDoc(userRef, { tempPassword: pwd }, { merge: true });
+                } catch (dbErr) {
+                    console.warn("Failed to sync new admin password to users collection:", dbErr);
+                }
                 showToast("Admin password updated successfully!");
                 adminSecurityForm.reset();
             } else {

@@ -153,6 +153,13 @@ export const initEmployeeProfile = async () => {
             // Firebase Auth requires recent login for this operation
             if (auth.currentUser) {
                 await updatePassword(auth.currentUser, pwd);
+                // Keep tempPassword in Firestore synced to support Forgot Password flow
+                try {
+                    const empRef = doc(db, 'employees', auth.currentUser.uid);
+                    await updateDoc(empRef, { tempPassword: pwd });
+                } catch (dbErr) {
+                    console.warn("Failed to sync new password to employee profile doc:", dbErr);
+                }
                 showToast("Password updated successfully!");
                 securityForm.reset();
             } else {
