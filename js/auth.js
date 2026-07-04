@@ -261,17 +261,12 @@ export const logoutUser = async () => {
     }
 };
 
-// Forgot Password Function (Bypasses email verification by prompting for a new password and resetting it using the current database credentials)
-export const resetPassword = async (email) => {
+// Forgot Password Function (Bypasses email verification by updating password using current database credentials validation)
+export const resetPassword = async (email, newPassword) => {
     if (!email) {
         throw new Error("Please enter your email address first.");
     }
-
-    const newPassword = prompt(`Enter new password for ${email} (minimum 6 characters):`);
-    if (!newPassword) {
-        throw new Error("Password reset cancelled.");
-    }
-    if (newPassword.trim().length < 6) {
+    if (!newPassword || newPassword.trim().length < 6) {
         throw new Error("Password must be at least 6 characters long.");
     }
 
