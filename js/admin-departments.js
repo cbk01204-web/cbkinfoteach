@@ -24,11 +24,13 @@ export const initAdminDepartments = async () => {
 
     const loadData = async () => {
         try {
-            // Fetch employees
+            // Fetch employees (excluding configuration documents)
             const empSnap = await getDocs(collection(db, "employees"));
             employeesList = [];
             empSnap.forEach(d => {
-                employeesList.push({ id: d.id, ...d.data() });
+                if (!d.id.startsWith('__config_')) {
+                    employeesList.push({ id: d.id, ...d.data() });
+                }
             });
 
             // Fetch current month's payroll to sum budget
@@ -47,13 +49,13 @@ export const initAdminDepartments = async () => {
                 payrollList.push(d.data());
             });
 
-            // Fetch departments from settings/general (guaranteed whitelisted settings rule)
+            // Fetch departments from employees/__config_departments__
             DEPARTMENTS = [];
             try {
-                const generalDocRef = doc(db, "settings", "general");
-                const docSnap = await getDoc(generalDocRef);
-                if (docSnap.exists() && docSnap.data().departments) {
-                    DEPARTMENTS = docSnap.data().departments;
+                const configDocRef = doc(db, "employees", "__config_departments__");
+                const docSnap = await getDoc(configDocRef);
+                if (docSnap.exists() && docSnap.data().list) {
+                    DEPARTMENTS = docSnap.data().list;
                 } else {
                     // Seed default departments
                     DEPARTMENTS = [
@@ -63,10 +65,10 @@ export const initAdminDepartments = async () => {
                         { id: '4', name: 'HR', icon: 'fa-users', color: 'info', manager: 'Emma Watson' },
                         { id: '5', name: 'Support', icon: 'fa-headset', color: 'danger', manager: 'David Miller' }
                     ];
-                    await setDoc(generalDocRef, { departments: DEPARTMENTS }, { merge: true });
+                    await setDoc(configDocRef, { list: DEPARTMENTS });
                 }
             } catch (deptErr) {
-                console.warn("Failed to fetch departments from Firestore (possibly offline). Using local defaults.", deptErr);
+                console.warn("Failed to fetch departments from Firestore. Using local defaults.", deptErr);
                 DEPARTMENTS = [
                     { id: '1', name: 'Engineering', icon: 'fa-code', color: 'primary', manager: 'Alex Rivera' },
                     { id: '2', name: 'Marketing', icon: 'fa-bullhorn', color: 'success', manager: 'Sarah Jenkins' },
@@ -181,7 +183,7 @@ export const initAdminDepartments = async () => {
 
         // Bind delete click
         document.querySelectorAll('.delete-dept-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const deptId = e.currentTarget.getAttribute('data-id');
                 const deptName = DEPARTMENTS.find(d => d.id === deptId)?.name || 'this department';
@@ -189,8 +191,8 @@ export const initAdminDepartments = async () => {
                 showCustomConfirm(`Are you sure you want to delete the "${deptName}" department? This action cannot be undone.`, async () => {
                     try {
                         const updatedDepts = DEPARTMENTS.filter(d => d.id !== deptId);
-                        const generalDocRef = doc(db, "settings", "general");
-                        await setDoc(generalDocRef, { departments: updatedDepts }, { merge: true });
+                        const configDocRef = doc(db, "employees", "__config_departments__");
+                        await setDoc(configDocRef, { list: updatedDepts });
 
                         import('./utils.js').then(m => m.showToast("Department deleted successfully.", "success"));
                         await loadData();
@@ -296,8 +298,8 @@ export const initAdminDepartments = async () => {
                     color
                 };
                 const updatedDepts = [...DEPARTMENTS, newDept];
-                const generalDocRef = doc(db, "settings", "general");
-                await setDoc(generalDocRef, { departments: updatedDepts }, { merge: true });
+                const configDocRef = doc(db, "employees", "__config_departments__");
+                await setDoc(configDocRef, { list: updatedDepts });
 
                 import('./utils.js').then(m => m.showToast("Department added successfully.", "success"));
                 closeAddDeptModalFn();

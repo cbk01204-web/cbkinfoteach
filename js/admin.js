@@ -159,33 +159,53 @@ const startRealtimeSync = () => {
             return;
         }
         target.length = 0;
-        snap.forEach(d => target.push({ id: d.id, ...d.data() }));
+        snap.forEach(d => {
+            if (!d.id.startsWith('__config_')) {
+                target.push({ id: d.id, ...d.data() });
+            }
+        });
         scheduleRedraw();
     };
 
     _unsubs.push(
-        // Core collections
-        onSnapshot(collection(db, 'employees'),    mkHandler(cacheEmployees,   'Employees')),
+        // Core collections (filter config documents from employees cache)
+        onSnapshot(collection(db, 'employees'), (snap, err) => {
+            if (err) {
+                console.error("[HRMS] Employees listener error:", err);
+                return;
+            }
+            cacheEmployees = [];
+            snap.forEach(d => {
+                if (!d.id.startsWith('__config_')) {
+                    cacheEmployees.push({ id: d.id, ...d.data() });
+                }
+            });
+            scheduleRedraw();
+        }),
         onSnapshot(collection(db, 'attendance'),   mkHandler(cacheAttendance,  'Attendance')),
         onSnapshot(collection(db, 'leaves'),       mkHandler(cacheLeaves,      'Leaves')),
         onSnapshot(collection(db, 'payroll'),      mkHandler(cachePayroll,     'Payroll')),
-        onSnapshot(collection(db, 'departments'),  mkHandler(cacheDepartments, 'Departments')),
-        // General settings & Holidays
-        onSnapshot(doc(db, 'settings', 'general'), (snap, err) => {
+        // Dynamic Holidays from employees/__config_holidays__
+        onSnapshot(doc(db, 'employees', '__config_holidays__'), (snap, err) => {
             if (err) {
-                console.error("[HRMS] settings listener error:", err);
+                console.warn("[HRMS] holidays listener warning:", err);
                 return;
             }
             if (snap.exists()) {
-                const data = snap.data();
-                const name = data.companyName;
+                cacheHolidays = snap.data().list || [];
+                scheduleRedraw();
+            }
+        }),
+        // Company name (silently ignore permission restrictions)
+        onSnapshot(doc(db, 'settings', 'general'), (snap, err) => {
+            if (err) return; // Silently skip settings rule restrict
+            if (snap.exists()) {
+                const name = snap.data().companyName;
                 if (name) {
                     const brand = document.querySelector('.sidebar-brand h2');
                     if (brand) brand.textContent = name;
                     document.title = `Dashboard — ${name} HRMS`;
                 }
-                cacheHolidays = data.holidays || [];
-                scheduleRedraw();
             }
         })
     );
@@ -621,8 +641,8 @@ const initCalendar = () => {
                                         if (confirm(`Remove holiday "${ev.rawName}"?`)) {
                                             try {
                                                 const updatedHols = cacheHolidays.filter(h => h.id !== ev.id);
-                                                const generalDocRef = doc(db, "settings", "general");
-                                                await setDoc(generalDocRef, { holidays: updatedHols }, { merge: true });
+                                                const configDocRef = doc(db, "employees", "__config_holidays__");
+                                                await setDoc(configDocRef, { list: updatedHols });
                                                 import('./utils.js').then(m => m.showToast("Holiday removed successfully.", "success"));
                                             } catch (err) {
                                                 console.error("Error removing holiday:", err);
@@ -710,8 +730,8 @@ const initCalendar = () => {
 
                 try {
                     const updatedHols = [...cacheHolidays, newHoliday];
-                    const generalDocRef = doc(db, "settings", "general");
-                    await setDoc(generalDocRef, { holidays: updatedHols }, { merge: true });
+                    const configDocRef = doc(db, "employees", "__config_holidays__");
+                    await setDoc(configDocRef, { list: updatedHols });
 
                     import('./utils.js').then(m => m.showToast("Holiday declared successfully.", "success"));
                     closeHolidayModalFn();

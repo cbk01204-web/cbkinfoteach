@@ -15,9 +15,9 @@ const populateDepartmentsDropdown = async () => {
     try {
         let depts = [];
         try {
-            const deptSnap = await getDoc(doc(db, "settings", "general"));
-            if (deptSnap.exists() && deptSnap.data().departments) {
-                const list = deptSnap.data().departments || [];
+            const deptSnap = await getDoc(doc(db, "employees", "__config_departments__"));
+            if (deptSnap.exists() && deptSnap.data().list) {
+                const list = deptSnap.data().list || [];
                 depts = list.map(d => d.name).filter(Boolean);
             }
         } catch (deptErr) {
@@ -219,7 +219,9 @@ const fetchEmployees = async () => {
         
         employeesData = [];
         querySnapshot.forEach((doc) => {
-            employeesData.push({ id: doc.id, ...doc.data() });
+            if (!doc.id.startsWith('__config_')) {
+                employeesData.push({ id: doc.id, ...doc.data() });
+            }
         });
         
         applyFilters(); // Renders the table
@@ -230,7 +232,9 @@ const fetchEmployees = async () => {
             const querySnapshot = await getDocs(collection(db, "employees"));
             employeesData = [];
             querySnapshot.forEach((doc) => {
-                employeesData.push({ id: doc.id, ...doc.data() });
+                if (!doc.id.startsWith('__config_')) {
+                    employeesData.push({ id: doc.id, ...doc.data() });
+                }
             });
             applyFilters();
         } catch (e) {
