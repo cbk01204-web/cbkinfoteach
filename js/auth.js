@@ -1,5 +1,6 @@
 import { showToast } from './utils.js';
-import { auth, db } from './firebase-config.js';
+import { auth, db, firebaseConfig } from './firebase-config.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
 import { 
     signInWithEmailAndPassword, 
     signOut, 
@@ -14,19 +15,54 @@ import {
     updateProfile,
     fetchSignInMethodsForEmail
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
-import { doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+// Initialize a secondary Firebase Auth instance to create employees without signing out the Admin session
+let secondaryAuth = null;
+try {
+    const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+    secondaryAuth = getAuth(secondaryApp);
+} catch (err) {
+    console.warn("Secondary Auth initialization check:", err);
+}
+
+function getAuth(appInstance) {
+    const { getAuth: fbGetAuth } = requirefbAuth();
+    return fbGetAuth(appInstance);
+}
+
+function requirefbAuth() {
+    return {
+        getAuth: (app) => {
+            const { getAuth } = AuthSDK;
+            return getAuth(app);
+        }
+    };
+}
+
+const AuthSDK = {
+    getAuth: (app) => {
+        return getAuthFromSDK(app);
+    }
+};
+
+function getAuthFromSDK(app) {
+    try {
+        const { getAuth: fbGetAuth } = window.firebaseAuth || {};
+        if (fbGetAuth) return fbGetAuth(app);
+    } catch (e) {}
+    return getAuthDirect(app);
+}
+
+import { getAuth as getAuthDirect } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
 // Helper to map Firebase errors to user-friendly messages
 const getErrorMessage = (error) => {
-    // Log unexpected errors only (exclude standard validation issues to keep console clean)
     const code = error?.code || error?.message || String(error);
-    if (code !== 'auth/invalid-credential' && code !== 'auth/wrong-password' && code !== 'auth/user-not-found') {
-        console.warn("[HRMS Auth] Detail error log:", error);
-    }
     switch (code) {
         case 'permission-denied':
         case 'FirestoreError: permission-denied':
-            return 'Firestore Permission Denied. Please update your Firestore Security Rules to allow reading the employees collection: match /employees/{docId} { allow read: if true; }';
+            return 'Firestore Permission Denied. Please check your Firestore security rules configuration.';
         case 'auth/invalid-email':
             return 'Invalid email address format.';
         case 'auth/email-already-in-use':
@@ -44,204 +80,145 @@ const getErrorMessage = (error) => {
         case 'auth/network-request-failed':
             return 'Network error. Please check your connection.';
         case 'auth/unauthorized-domain':
-            return 'Google Login is not authorized for this domain. Please access the site via http://localhost:5500 instead of 127.0.0.1';
+            return 'This domain is not authorized for Firebase Authentication.';
         default:
-            return 'An error occurred during authentication. Check browser console for full stack trace.';
+            return code;
     }
 };
 
-// Login Function
+// Login Function (Clean, using signInWithEmailAndPassword only)
 export const loginUser = async (email, password, rememberMe, expectedRole) => {
+    // Set persistence based on Remember Me
+    const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+    await setPersistence(auth, persistenceType);
+
     try {
-        // Set persistence based on Remember Me
-        const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-        await setPersistence(auth, persistenceType);
+        // Attempt standard Firebase Auth sign in
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
-        let user;
-        try {
-            // Attempt standard Firebase Auth sign in
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            user = userCredential.user;
-        } catch (authError) {
-            // Auto-registration bypass for ANY email if the account does not exist in Auth yet:
-            if (authError.code === 'auth/user-not-found' || authError.code === 'auth/invalid-credential') {
-                try {
-                    const role = expectedRole || 'employee';
-                    const baseName = email.split('@')[0];
-                    const formattedName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
-                    const fullName = role === 'admin' ? `${formattedName} Admin` : `${formattedName} Employee`;
+        // Fetch user document from Firestore 'users' collection to check role
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
 
-                    // Check password length limit (minimum 6 chars for Firebase Auth)
-                    if (password.length < 6) {
-                        throw new Error("Password must be at least 6 characters.");
-                    }
-                    
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    user = userCredential.user;
-                    await updateProfile(user, { displayName: fullName });
-                    
-                    await setDoc(doc(db, 'users', user.uid), {
-                        email: user.email,
-                        role: role,
-                        fullName: fullName,
-                        dob: '1995-01-01',
-                        updatedAt: new Date().toISOString()
-                    });
-                    
-                    if (role === 'employee') {
-                        await setDoc(doc(db, 'employees', user.uid), {
-                            uid: user.uid,
-                            firstName: formattedName,
-                            lastName: 'Employee',
-                            email: user.email,
-                            department: 'Engineering',
-                            role: 'Software Engineer',
-                            phone: '123-456-7890',
-                            updatedAt: new Date()
-                        });
-                    }
-                    console.log(`Auto-registered ${fullName} account successfully on login.`);
-                } catch (regErr) {
-                    console.warn("Auto-registration fallback failed, checking tempPassword:", regErr);
-                    
-                    // If auto-registration failed (e.g. invalid email format or weak password),
-                    // run fallback lookup for temporary password pre-created by admin:
-                    try {
-                        const q = query(collection(db, "employees"), where("email", "==", email));
-                        const querySnapshot = await getDocs(q);
-                        
-                        let matchDoc = null;
-                        let oldDocId = null;
-                        querySnapshot.forEach(d => {
-                            const data = d.data();
-                            if (data.tempPassword && data.tempPassword === password) {
-                                matchDoc = data;
-                                oldDocId = d.id;
-                            }
-                        });
-
-                        if (matchDoc) {
-                            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                            user = userCredential.user;
-                            const fullName = `${matchDoc.firstName || ''} ${matchDoc.lastName || ''}`.trim();
-                            if (fullName) {
-                                await updateProfile(user, { displayName: fullName });
-                            }
-                            await setDoc(doc(db, 'users', user.uid), {
-                                email: user.email,
-                                role: 'employee',
-                                fullName: fullName,
-                                dob: matchDoc.dob || '',
-                                updatedAt: new Date().toISOString()
-                            });
-                            await setDoc(doc(db, 'employees', user.uid), {
-                                ...matchDoc,
-                                uid: user.uid,
-                                updatedAt: new Date()
-                            });
-                            if (oldDocId && oldDocId !== user.uid) {
-                                await deleteDoc(doc(db, 'employees', oldDocId));
-                            }
-                            console.log("Pre-registered employee successfully activated on login.");
-                        } else {
-                            throw new Error(regErr.message || authError.message);
-                        }
-                    } catch (fallbackErr) {
-                        throw new Error(fallbackErr.message || regErr.message || authError.message);
-                    }
-                }
+        let role = null;
+        if (userDocSnap.exists()) {
+            role = userDocSnap.data().role;
+        } else {
+            // Fallback to employees collection check
+            const empDocRef = doc(db, 'employees', user.uid);
+            const empDocSnap = await getDoc(empDocRef);
+            if (empDocSnap.exists()) {
+                role = empDocSnap.data().role || 'employee';
             } else {
-                throw authError;
+                await signOut(auth);
+                throw new Error("Unauthorized access. User profile not found.");
             }
         }
 
-        localStorage.setItem('userRole', expectedRole);
+        // Validate role matches expected login portal
+        if (expectedRole && role !== expectedRole) {
+            await signOut(auth);
+            throw new Error(`Access denied. You do not have permission to access the ${expectedRole} portal.`);
+        }
+
+        // Check active/disabled status from employees collection
+        const empDocRef = doc(db, 'employees', user.uid);
+        const empDocSnap = await getDoc(empDocRef);
+        if (empDocSnap.exists()) {
+            const empData = empDocSnap.data();
+            if (empData.status && empData.status.toLowerCase() === 'disabled') {
+                await signOut(auth);
+                throw new Error("Account is disabled. Please contact the administrator.");
+            }
+        }
+
+        localStorage.setItem('userRole', role || '');
         localStorage.setItem('userEmail', user.email);
 
         // Redirect based on role
-        if (expectedRole === 'admin') {
+        if (role === 'admin') {
             window.location.href = 'admin-dashboard.html';
         } else {
             window.location.href = 'employee-dashboard.html';
         }
+        return user;
     } catch (error) {
         throw new Error(getErrorMessage(error));
     }
 };
 
-// Register Function
+// Disabled Self-Registration (Blocks direct registration attempts)
 export const registerUser = async (email, password, expectedRole, fullName = '', dob = '') => {
-    let user;
-    try {
-        const methods = await fetchSignInMethodsForEmail(auth, email);
-        if (methods && methods.length > 0) {
-            // Email is already in use, try logging them in automatically
-            try {
-                const loginCredential = await signInWithEmailAndPassword(auth, email, password);
-                user = loginCredential.user;
-            } catch (loginError) {
-                throw new Error("This email is already registered. Please switch to Sign In.");
-            }
-        } else {
-            // Email not in use, create user
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            user = userCredential.user;
+    throw new Error("Self-registration is disabled. Please request an administrator to create your account.");
+};
+
+// Function to register a new employee from the Admin Portal (using Secondary App to avoid logging out the Admin)
+export const registerEmployeeFromAdmin = async (empData, password) => {
+    if (!secondaryAuth) {
+        try {
+            const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+            secondaryAuth = getAuth(secondaryApp);
+        } catch (err) {
+            console.error("Secondary app init error:", err);
+            throw new Error("Secondary Authentication service is not initialized.");
         }
+    }
+
+    const email = empData.email.trim();
+    
+    // Prevent duplicate email creation - check Firestore users collection
+    const usersQuery = query(collection(db, "users"), where("email", "==", email));
+    const usersSnap = await getDocs(usersQuery);
+    if (!usersSnap.empty) {
+        throw new Error("An account with this email address already exists.");
+    }
+
+    try {
+        // Create the user in Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const user = userCredential.user;
+
+        // Update their auth profile display name
+        const fullName = `${empData.firstName} ${empData.lastName}`.trim();
+        await updateProfile(user, { displayName: fullName });
+
+        // Save to 'users' collection
+        await setDoc(doc(db, 'users', user.uid), {
+            email: user.email,
+            role: 'employee',
+            fullName: fullName,
+            dob: empData.dob || '',
+            updatedAt: new Date().toISOString()
+        });
+
+        // Save to 'employees' collection using user.uid as Document ID
+        const employeeDocData = {
+            uid: user.uid,
+            email: user.email,
+            firstName: empData.firstName,
+            lastName: empData.lastName,
+            phone: empData.phone || '',
+            department: empData.department,
+            designation: empData.role || '',
+            role: 'employee',
+            joiningDate: empData.joiningDate || new Date().toISOString().split('T')[0],
+            salary: Number(empData.salary) || 50000,
+            status: empData.status || 'Active',
+            empId: empData.empId,
+            tempPassword: password,
+            createdAt: empData.createdAt || new Date(),
+            updatedAt: new Date()
+        };
+        if (empData.photoUrl) {
+            employeeDocData.photoUrl = empData.photoUrl;
+        }
+
+        await setDoc(doc(db, 'employees', user.uid), employeeDocData);
+        console.log(`Pre-registered employee ${fullName} successfully created with UID: ${user.uid}`);
+        return user;
     } catch (error) {
         throw new Error(getErrorMessage(error));
-    }
-
-    // Update auth profile with full name
-    if (fullName && user) {
-        try {
-            await updateProfile(user, { displayName: fullName });
-        } catch (profileError) {
-            console.warn("Failed to update auth profile:", profileError);
-        }
-    }
-
-    // Save additional details to Firestore
-    if (user) {
-        try {
-            await setDoc(doc(db, 'users', user.uid), {
-                email: user.email,
-                role: expectedRole,
-                fullName: fullName,
-                dob: dob,
-                updatedAt: new Date().toISOString()
-            });
-
-            // If registering as employee, also create an employee profile document under their UID
-            if (expectedRole === 'employee') {
-                const nameParts = fullName.trim().split(/\s+/);
-                const firstName = nameParts[0] || 'Employee';
-                const lastName = nameParts.slice(1).join(' ') || '';
-                
-                await setDoc(doc(db, 'employees', user.uid), {
-                    firstName,
-                    lastName,
-                    email: user.email,
-                    role: 'Employee',
-                    department: 'Engineering', // Default department
-                    phone: '',
-                    empId: `EMP-${Math.floor(1000 + Math.random() * 9000)}`, // Random temporary ID
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                    uid: user.uid
-                });
-            }
-        } catch (dbError) {
-            console.warn("Could not save to Firestore due to permissions, but user is authenticated:", dbError);
-        }
-        
-        localStorage.setItem('userRole', expectedRole);
-        localStorage.setItem('userEmail', user.email);
-
-        if (expectedRole === 'admin') {
-            window.location.href = 'admin-dashboard.html';
-        } else {
-            window.location.href = 'employee-dashboard.html';
-        }
     }
 };
 
@@ -251,11 +228,34 @@ export const loginWithGoogle = async (expectedRole) => {
         const provider = new GoogleAuthProvider();
         const userCredential = await signInWithPopup(auth, provider);
         const user = userCredential.user;
-        
-        localStorage.setItem('userRole', expectedRole);
+
+        // Fetch user document from Firestore 'users' collection to check role
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        let role = expectedRole;
+        if (userDocSnap.exists()) {
+            role = userDocSnap.data().role;
+        } else {
+            // Write default user document if login with Google is clean
+            await setDoc(userDocRef, {
+                email: user.email,
+                role: expectedRole,
+                fullName: user.displayName || 'Google User',
+                updatedAt: new Date().toISOString()
+            });
+        }
+
+        // Verify role match
+        if (expectedRole && role !== expectedRole) {
+            await signOut(auth);
+            throw new Error(`Access denied. You do not have permission to access the ${expectedRole} portal.`);
+        }
+
+        localStorage.setItem('userRole', role);
         localStorage.setItem('userEmail', user.email);
 
-        if (expectedRole === 'admin') {
+        if (role === 'admin') {
             window.location.href = 'admin-dashboard.html';
         } else {
             window.location.href = 'employee-dashboard.html';
@@ -293,36 +293,76 @@ export const resetPassword = async (email) => {
 
 // Route Guard - Prevent unauthorized access
 export const checkAuthState = (requiredRole = null) => {
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            // Not logged in — show a gentle overlay instead of instant redirect
-            // This keeps the page visible (no blank flash) while prompting login
             showSessionExpiredOverlay(requiredRole);
         } else {
-            // User is logged in
-            const currentRole = localStorage.getItem('userRole');
-            
-            // Check if they are authorized for this specific dashboard
-            if (requiredRole && currentRole !== requiredRole) {
-                console.log(`Unauthorized access. Required: ${requiredRole}, Current: ${currentRole}`);
-                if (currentRole === 'admin') {
-                    window.location.href = 'admin-dashboard.html';
-                } else if (currentRole === 'employee') {
-                    window.location.href = 'employee-dashboard.html';
+            try {
+                // Securely retrieve role from Firestore directly to block local storage manipulation
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                
+                let currentRole = null;
+                let status = 'Active';
+
+                if (userDocSnap.exists()) {
+                    currentRole = userDocSnap.data().role;
                 } else {
-                    logoutUser();
+                    // Fallback to employees collection
+                    const empDocRef = doc(db, 'employees', user.uid);
+                    const empDocSnap = await getDoc(empDocRef);
+                    if (empDocSnap.exists()) {
+                        currentRole = empDocSnap.data().role || 'employee';
+                        status = empDocSnap.data().status || 'Active';
+                    }
+                }
+
+                // Check active status
+                const empDocRef = doc(db, 'employees', user.uid);
+                const empDocSnap = await getDoc(empDocRef);
+                if (empDocSnap.exists()) {
+                    status = empDocSnap.data().status || 'Active';
+                }
+
+                if (status && status.toLowerCase() === 'disabled') {
+                    console.warn("User account is marked disabled. Revoking access.");
+                    await signOut(auth);
+                    showSessionExpiredOverlay(requiredRole);
+                    return;
+                }
+
+                if (requiredRole && currentRole !== requiredRole) {
+                    console.warn(`Role bypass detected. Required: ${requiredRole}, Current: ${currentRole}`);
+                    if (currentRole === 'admin') {
+                        window.location.href = 'admin-dashboard.html';
+                    } else if (currentRole === 'employee') {
+                        window.location.href = 'employee-dashboard.html';
+                    } else {
+                        await signOut(auth);
+                        showSessionExpiredOverlay(requiredRole);
+                    }
+                } else {
+                    localStorage.setItem('userRole', currentRole || '');
+                    localStorage.setItem('userEmail', user.email);
+
+                    // Remove lock overlay if authorized
+                    const overlay = document.getElementById('auth-overlay');
+                    if (overlay) overlay.remove();
+                }
+            } catch (err) {
+                console.error("Route guard verification failed:", err);
+                const currentRole = localStorage.getItem('userRole');
+                if (requiredRole && currentRole !== requiredRole) {
+                    showSessionExpiredOverlay(requiredRole);
                 }
             }
-            // User is authorized — remove any overlay if it exists
-            const overlay = document.getElementById('auth-overlay');
-            if (overlay) overlay.remove();
         }
     });
 };
 
 // Show a non-blocking session overlay instead of instant redirect
 const showSessionExpiredOverlay = (role) => {
-    if (document.getElementById('auth-overlay')) return; // Already showing
+    if (document.getElementById('auth-overlay')) return;
     const loginPage = role === 'admin' ? 'admin-login.html' : 'employee-login.html';
     const overlay = document.createElement('div');
     overlay.id = 'auth-overlay';
@@ -350,8 +390,3 @@ const showSessionExpiredOverlay = (role) => {
         </div>`;
     document.body.appendChild(overlay);
 };
-
-
-/**
- * Standardizes Auth state persistence.
- */

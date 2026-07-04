@@ -35,5 +35,6 @@ export const db = initializeFirestore(app, {
 });
 
 export const storage = getStorage(app);
+export { firebaseConfig };
 
 console.log("🔥 Firebase initialized successfully (v12.15.0 Modular SDK + Offline Persistence)");

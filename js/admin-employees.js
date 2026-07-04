@@ -6,6 +6,7 @@ import {
     ref, uploadBytes, getDownloadURL 
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";
 import { showToast } from './utils.js';
+import { registerEmployeeFromAdmin } from './auth.js';
 
 // State
 let employeesData = [];
@@ -165,17 +166,23 @@ export const initEmployeeManagement = async () => {
             if (currentEditId) {
                 // UPDATE Existing
                 if (photoUrl) empData.photoUrl = photoUrl; // Only update photo if new one uploaded
+                empData.designation = empData.role; // Keep job title in designation
+                empData.role = 'employee';          // Force role to employee
                 await updateDoc(doc(db, "employees", currentEditId), empData);
                 console.log("Employee updated!");
+                showToast("Employee updated successfully!");
             } else {
                 // ADD New
                 empData.createdAt = new Date();
                 empData.empId = generateNextEmpId();
-                empData.tempPassword = document.getElementById('emp-password').value; // Save temporary password
                 if (photoUrl) empData.photoUrl = photoUrl;
                 
-                await addDoc(collection(db, "employees"), empData);
+                const tempPassword = document.getElementById('emp-password').value;
+                
+                // Call registerEmployeeFromAdmin to handle Auth user creation, Firestore user, and employee doc with correct UID
+                await registerEmployeeFromAdmin(empData, tempPassword);
                 console.log("Employee added!");
+                showToast("Employee created successfully!");
             }
 
             closeModal();
@@ -183,7 +190,7 @@ export const initEmployeeManagement = async () => {
 
         } catch (error) {
             console.error("Error saving employee: ", error);
-            showToast("Failed to save employee. Check console for details.");
+            showToast(error.message || "Failed to save employee.");
         } finally {
             saveBtn.innerHTML = originalBtnText;
             saveBtn.disabled = false;
@@ -303,7 +310,7 @@ const renderTable = (data) => {
             <td style="font-family: monospace; font-weight: 500;">${emp.empId || 'N/A'}</td>
             <td>${emp.phone || 'N/A'}</td>
             <td><span class="badge" style="background: var(--hover-bg); color: var(--text-main);">${emp.department || 'N/A'}</span></td>
-            <td>${emp.role || 'N/A'}</td>
+            <td>${emp.designation || emp.role || 'N/A'}</td>
             <td>${pwdDisplay}</td>
             <td>
                 <div style="display: flex; gap: 0.5rem;">
@@ -354,7 +361,7 @@ const handleEdit = (id) => {
     document.getElementById('emp-email').value = emp.email;
     document.getElementById('emp-phone').value = emp.phone;
     document.getElementById('emp-dept').value = emp.department;
-    document.getElementById('emp-role').value = emp.role;
+    document.getElementById('emp-role').value = emp.designation || emp.role;
     
     // Preview photo
     const photoPreview = document.getElementById('photo-preview');
