@@ -460,7 +460,7 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
             showToast("Failed to punch out.");
             punchOutBtn.disabled = false;
         } finally {
-            punchOutBtn.innerHTML = '<i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Punch Out';
+            punchOutBtn.innerHTML = '<i class="fa-solid fa-sign-out-alt mr-2"></i> Punch Out';
         }
     };
 };

@@ -251,4 +251,14 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 0 25px rgba(79, 70, 229, 0.9), 0 0 10px rgba(255, 255, 255, 0.4) inset;
 }
 
-
+/* Disabled button styles */
+button:disabled,
+.btn:disabled {
+  background-color: var(--gray-200) !important;
+  border-color: var(--gray-200) !important;
+  color: var(--gray-600) !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+  opacity: 0.65;
+}

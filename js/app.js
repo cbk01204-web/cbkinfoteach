@@ -877,7 +877,7 @@ const initProfileDropdown = () => {
             <i class="fa-solid fa-user-gear"></i> View Profile
         </a>
         <a href="#" id="dropdown-logout" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; color: var(--danger, #ef4444); text-decoration: none; font-size: 0.85rem; border-top: 1px solid var(--border-color); transition: background 0.15s;">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            <i class="fa-solid fa-sign-out-alt"></i> Logout
         </a>
     `;
 
