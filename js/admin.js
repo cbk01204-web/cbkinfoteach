@@ -152,12 +152,7 @@ const loadCompanyName = async () => {
 // REALTIME SNAPSHOT LISTENERS
 // ─────────────────────────────────────────────────────────────────────
 const startRealtimeSync = () => {
-    const mkHandler = (target, label) => (snap, err) => {
-        if (err) {
-            console.error(`[HRMS] ${label} listener error:`, err);
-            showListenerError(label);
-            return;
-        }
+    const mkNextHandler = (target) => (snap) => {
         target.length = 0;
         snap.forEach(d => {
             if (!d.id.startsWith('config_')) {
@@ -167,13 +162,14 @@ const startRealtimeSync = () => {
         scheduleRedraw();
     };
 
+    const mkErrHandler = (label) => (err) => {
+        console.warn(`[HRMS] ${label} listener restricted:`, err);
+        showListenerError(label);
+    };
+
     _unsubs.push(
         // Core collections (filter config documents from employees cache)
-        onSnapshot(collection(db, 'employees'), (snap, err) => {
-            if (err) {
-                console.error("[HRMS] Employees listener error:", err);
-                return;
-            }
+        onSnapshot(collection(db, 'employees'), (snap) => {
             cacheEmployees = [];
             snap.forEach(d => {
                 if (!d.id.startsWith('config_')) {
@@ -181,24 +177,23 @@ const startRealtimeSync = () => {
                 }
             });
             scheduleRedraw();
+        }, (err) => {
+            console.warn("[HRMS] Employees listener restricted:", err);
         }),
-        onSnapshot(collection(db, 'attendance'),   mkHandler(cacheAttendance,  'Attendance')),
-        onSnapshot(collection(db, 'leaves'),       mkHandler(cacheLeaves,      'Leaves')),
-        onSnapshot(collection(db, 'payroll'),      mkHandler(cachePayroll,     'Payroll')),
+        onSnapshot(collection(db, 'attendance'),   mkNextHandler(cacheAttendance), mkErrHandler('Attendance')),
+        onSnapshot(collection(db, 'leaves'),       mkNextHandler(cacheLeaves),     mkErrHandler('Leaves')),
+        onSnapshot(collection(db, 'payroll'),      mkNextHandler(cachePayroll),    mkErrHandler('Payroll')),
         // Dynamic Holidays from employees/config_holidays
-        onSnapshot(doc(db, 'employees', 'config_holidays'), (snap, err) => {
-            if (err) {
-                console.warn("[HRMS] holidays listener warning:", err);
-                return;
-            }
+        onSnapshot(doc(db, 'employees', 'config_holidays'), (snap) => {
             if (snap.exists()) {
                 cacheHolidays = snap.data().list || [];
                 scheduleRedraw();
             }
+        }, (err) => {
+            console.warn("[HRMS] holidays listener restricted:", err);
         }),
         // Company name (silently ignore permission restrictions)
-        onSnapshot(doc(db, 'settings', 'general'), (snap, err) => {
-            if (err) return; // Silently skip settings rule restrict
+        onSnapshot(doc(db, 'settings', 'general'), (snap) => {
             if (snap.exists()) {
                 const name = snap.data().companyName;
                 if (name) {
@@ -207,6 +202,8 @@ const startRealtimeSync = () => {
                     document.title = `Dashboard — ${name} HRMS`;
                 }
             }
+        }, (err) => {
+            // Silently skip settings rule restrict
         })
     );
 };
