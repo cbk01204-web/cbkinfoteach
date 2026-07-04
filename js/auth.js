@@ -18,10 +18,11 @@ import { doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc } fro
 
 // Helper to map Firebase errors to user-friendly messages
 const getErrorMessage = (error) => {
-    // Log full error object in console for developer review
-    console.error("[HRMS Auth] Detail error log:", error);
-    
+    // Log unexpected errors only (exclude standard validation issues to keep console clean)
     const code = error?.code || error?.message || String(error);
+    if (code !== 'auth/invalid-credential' && code !== 'auth/wrong-password' && code !== 'auth/user-not-found') {
+        console.warn("[HRMS Auth] Detail error log:", error);
+    }
     switch (code) {
         case 'permission-denied':
         case 'FirestoreError: permission-denied':
