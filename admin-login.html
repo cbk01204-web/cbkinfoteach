@@ -109,13 +109,6 @@
                     <a href="#" id="auth-toggle-btn">Sign Up</a>
                 </div>
             </form>
-
-            <!-- Quick Demo Credentials Box -->
-            <div class="demo-credentials" id="demo-credentials-box" style="margin-top: 1.5rem; padding: 0.75rem; background: rgba(79, 70, 229, 0.08); border: 1px dashed var(--primary); border-radius: 8px; font-size: 0.8rem; text-align: center; cursor: pointer; transition: background 0.2s;" onclick="fillDemoCredentials()">
-                <div style="font-weight: 600; color: var(--primary); margin-bottom: 0.25rem;"><i class="fa-solid fa-key" style="margin-right: 4px;"></i> Click for Quick Demo Access</div>
-                <div style="color: var(--text-muted);">Email: <span style="font-weight: 500; color: var(--text-main);">admin@cbkinfotech.com</span></div>
-                <div style="color: var(--text-muted);">Password: <span style="font-weight: 500; color: var(--text-main);">password123</span></div>
-            </div>
             
             <div class="text-center mt-4">
                 <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
@@ -135,11 +128,6 @@
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
             }
-        };
-
-        window.fillDemoCredentials = function() {
-            document.getElementById('email').value = 'admin@cbkinfotech.com';
-            document.getElementById('password').value = 'password123';
         };
     </script>
     <script type="module">
