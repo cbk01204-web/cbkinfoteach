@@ -108,6 +108,24 @@
                     <span id="auth-toggle-text">Don't have an account? </span>
                     <a href="#" id="auth-toggle-btn">Sign Up</a>
                 </div>
+
+                <!-- Demo Auto-Fill Section -->
+                <div class="demo-autofill-section" style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed #e2e8f0; text-align: left;">
+                    <div style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.35rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <i class="fa-solid fa-key" style="color: #6366f1;"></i> Demo Credentials
+                    </div>
+                    <div style="display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.25rem;">
+                        <button type="button" class="demo-btn" data-email="cbk001@cbkinfotech.com" style="flex: 1; min-width: 90px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.4rem; font-size: 0.72rem; color: #475569; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0'">
+                            CBK001
+                        </button>
+                        <button type="button" class="demo-btn" data-email="cbk002@cbkinfotech.com" style="flex: 1; min-width: 90px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.4rem; font-size: 0.72rem; color: #475569; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0'">
+                            CBK002
+                        </button>
+                        <button type="button" class="demo-btn" data-email="cbk003@cbkinfotech.com" style="flex: 1; min-width: 90px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.4rem; font-size: 0.72rem; color: #475569; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0'">
+                            CBK003
+                        </button>
+                    </div>
+                </div>
             </form>
             
             <div class="text-center mt-4">
@@ -116,36 +134,7 @@
         </div>
     </div>
 
-    <!-- Beautiful Password Reset Modal -->
-    <div id="reset-password-modal" style="display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; animation: fadeIn 0.3s ease;">
-        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2.5rem; width: 100%; max-width: 440px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔐</div>
-            <h3 style="color: #f8fafc; margin: 0 0 0.5rem; font-family: Inter, sans-serif; font-size: 1.25rem;">Reset Password</h3>
-            <p style="color: #94a3b8; font-size: 0.85rem; margin: 0 0 1.5rem; font-family: Inter, sans-serif; line-height: 1.4;">
-                Select a recovery method for <span id="reset-email-display" style="font-weight: 600; color: #818cf8;">email</span>.
-            </p>
-            
-            <div style="text-align: left; background: rgba(30, 41, 59, 0.5); border: 1px solid #334155; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-                <div style="font-weight: 600; color: #f8fafc; font-size: 0.85rem; margin-bottom: 0.25rem;">📧 Option A: Production Email Link</div>
-                <div style="color: #94a3b8; font-size: 0.75rem; line-height: 1.3; margin-bottom: 0.75rem;">
-                    Sends a secure reset link to your email inbox. Click the link to update your password.
-                </div>
-                <button type="button" id="reset-email-btn" style="width: 100%; background: #4f46e5; color: #ffffff; border: none; padding: 0.6rem; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">Send Reset Email</button>
-            </div>
 
-            <div style="text-align: left; background: rgba(79, 70, 229, 0.05); border: 1px dashed #4f46e5; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-                <div style="font-weight: 600; color: #818cf8; font-size: 0.85rem; margin-bottom: 0.25rem;">💻 Option B: Local Testing Bypass</div>
-                <div style="color: #94a3b8; font-size: 0.75rem; line-height: 1.3; margin-bottom: 0.5rem;">
-                    If you are testing locally with a mock email, run this command in your terminal to instantly update the password:
-                </div>
-                <code style="display: block; background: #0f172a; padding: 0.5rem; border-radius: 4px; color: #34d399; font-family: monospace; font-size: 0.75rem; margin-bottom: 0.25rem; word-break: break-all;">node scripts/reset-password.js</code>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end;">
-                <button type="button" id="reset-close-btn" style="background: transparent; color: #94a3b8; border: 1px solid #334155; padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#334155'; this.style.color='#f8fafc'" onmouseout="this.style.background='transparent'; this.style.color='#94a3b8'">Close</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         window.togglePassword = function(inputId, icon) {
@@ -182,12 +171,6 @@
         const authToggleBtn = document.getElementById('auth-toggle-btn');
         const authToggleText = document.getElementById('auth-toggle-text');
         const formTitle = document.querySelector('.brand-logo p');
-
-        const resetPasswordModal = document.getElementById('reset-password-modal');
-        const resetEmailDisplay = document.getElementById('reset-email-display');
-        const resetEmailBtn = document.getElementById('reset-email-btn');
-        const resetCloseBtn = document.getElementById('reset-close-btn');
-
         let isLoginMode = true;
 
         // Restrict DOB to at least 16 years ago
@@ -290,8 +273,8 @@
             }
         });
 
-        // Handle Forgot Password click to show Option A/B Modal
-        forgotPasswordLink.addEventListener('click', (e) => {
+        // Handle Forgot Password
+        forgotPasswordLink.addEventListener('click', async (e) => {
             e.preventDefault();
             errorMsg.style.display = 'none';
             successMsg.style.display = 'none';
@@ -304,20 +287,6 @@
                 return;
             }
 
-            resetEmailDisplay.textContent = email;
-            resetPasswordModal.style.display = 'flex';
-        });
-
-        // Close reset modal
-        resetCloseBtn.addEventListener('click', () => {
-            resetPasswordModal.style.display = 'none';
-        });
-
-        // Option A: Send Reset Email
-        resetEmailBtn.addEventListener('click', async () => {
-            const email = emailInput.value.trim();
-            resetPasswordModal.style.display = 'none';
-            
             submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Sending Email...';
             submitBtn.disabled = true;
 
@@ -332,6 +301,16 @@
                 submitBtn.innerHTML = isLoginMode ? 'Sign In' : 'Sign Up';
                 submitBtn.disabled = false;
             }
+        });
+
+        // Handle Quick Autofill
+        document.querySelectorAll('.demo-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                emailInput.value = btn.getAttribute('data-email');
+                passwordInput.value = 'password123';
+                emailInput.dispatchEvent(new Event('input'));
+                passwordInput.dispatchEvent(new Event('input'));
+            });
         });
     </script>
 </body>

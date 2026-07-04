@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS Dummy Account Seeder - CBK Infotech</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            position: relative;
+        }
+
+        h2 {
+            margin: 0 0 0.5rem;
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0 0 2rem;
+        }
+
+        .btn-seed {
+            background-color: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 0.85rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-seed:hover:not(:disabled) {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-seed:disabled {
+            background-color: #475569;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #progress-container {
+            margin-top: 2rem;
+            text-align: left;
+            display: none;
+        }
+
+        .progress-bar-wrapper {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            height: 12px;
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #6366f1, #a855f7);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        #progress-text {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        #log-box {
+            margin-top: 1.5rem;
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            padding: 1rem;
+            text-align: left;
+            box-sizing: border-box;
+        }
+
+        /* Scrollbar styling */
+        #log-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        #log-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #log-box::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>HRMS Dummy Account Seeder</h2>
+            <p>Seeding 15 dummy employee credentials (CBK001 - CBK015) with default password <strong>password123</strong> into Firebase Authentication and Cloud Firestore.</p>
+            
+            <button id="start-btn" class="btn-seed">
+                <i class="fa-solid fa-play"></i> Start Seeding Process
+            </button>
+
+            <div id="progress-container">
+                <div class="progress-bar-wrapper">
+                    <div id="progress-bar"></div>
+                </div>
+                <div id="progress-text">Progress: 0% (0/15)</div>
+            </div>
+
+            <div id="log-box">
+                <div style="color: var(--text-secondary); font-style: italic;">Log output will appear here after starting...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from './js/firebase-config.js';
+        import { 
+            createUserWithEmailAndPassword,
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+        import { doc, setDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+        const startBtn = document.getElementById('start-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const logBox = document.getElementById('log-box');
+
+        function addLog(text, type = 'info') {
+            const el = document.createElement('div');
+            el.style.marginBottom = '0.4rem';
+            el.style.fontSize = '0.85rem';
+            el.style.fontFamily = 'monospace';
+            
+            if (type === 'success') {
+                el.style.color = '#34d399';
+                el.textContent = `[SUCCESS] ${text}`;
+            } else if (type === 'error') {
+                el.style.color = '#f87171';
+                el.textContent = `[ERROR] ${text}`;
+            } else {
+                el.style.color = '#94a3b8';
+                el.textContent = `[INFO] ${text}`;
+            }
+            logBox.appendChild(el);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        startBtn.addEventListener('click', async () => {
+            startBtn.disabled = true;
+            startBtn.textContent = 'Seeding...';
+            progressContainer.style.display = 'block';
+            logBox.innerHTML = '';
+            
+            addLog('Starting dummy users creation process for 15 accounts (CBK001 - CBK015)...');
+            
+            const password = 'password123';
+            let successCount = 0;
+            
+            for (let i = 1; i <= 15; i++) {
+                const idStr = String(i).padStart(3, '0');
+                const email = `cbk${idStr}@cbkinfotech.com`;
+                const empId = `CBK${idStr}`;
+                const fullName = `Employee ${idStr}`;
+                
+                addLog(`Registering ${email}...`);
+                
+                try {
+                    // Create in Firebase Authentication
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    addLog(`Auth user created for ${email}. Creating Firestore profiles...`);
+                    
+                    // Create user document
+                    await setDoc(doc(db, 'users', user.uid), {
+                        email: email,
+                        role: 'employee',
+                        fullName: fullName,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    // Create employee document
+                    await setDoc(doc(db, 'employees', user.uid), {
+                        uid: user.uid,
+                        email: email,
+                        firstName: 'Employee',
+                        lastName: idStr,
+                        empId: empId,
+                        role: 'employee',
+                        designation: 'Software Engineer',
+                        department: 'Engineering',
+                        phone: `123-456-7${idStr}`,
+                        joiningDate: new Date().toISOString().split('T')[0],
+                        salary: 50000,
+                        status: 'Active',
+                        tempPassword: password,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    // Sign out current authenticated user to allow next registration
+                    await signOut(auth);
+                    
+                    successCount++;
+                    addLog(`Successfully registered ${email} (UID: ${user.uid})`, 'success');
+                } catch (err) {
+                    addLog(`Failed to create ${email}: ${err.message}`, 'error');
+                }
+                
+                // Update progress bar
+                const percent = Math.round((i / 15) * 100);
+                progressBar.style.width = `${percent}%`;
+                progressText.textContent = `Progress: ${percent}% (${i}/15)`;
+            }
+            
+            addLog(`Seeding complete. Successfully registered ${successCount}/15 accounts.`, 'success');
+            startBtn.textContent = 'Seed Again';
+            startBtn.disabled = false;
+        });
+    </script>
+</body>
+</html>
