@@ -183,7 +183,15 @@ export const initAdminAttendance = () => {
                 if (rec.isLate) statusBadges += '<span class="badge badge-warning" style="margin-right: 5px;">Late</span>';
                 if (rec.isEarlyExit) statusBadges += '<span class="badge badge-danger" style="margin-right: 5px;">Early Exit</span>';
                 if (!rec.isLate && !rec.isEarlyExit && rec.punchOut) statusBadges += '<span class="badge badge-success" style="margin-right: 5px;">On Time</span>';
-                if (!rec.punchOut) statusBadges += '<span class="badge badge-info" style="margin-right: 5px;">Working</span>';
+                if (!rec.punchOut) {
+                    const breaks = rec.breaks || [];
+                    const isOnBreak = breaks.length > 0 && !breaks[breaks.length - 1].end;
+                    if (isOnBreak) {
+                        statusBadges += '<span class="badge badge-warning" style="margin-right: 5px; background: rgba(245,158,11,0.12); color: #f59e0b;">On Break</span>';
+                    } else {
+                        statusBadges += '<span class="badge badge-info" style="margin-right: 5px;">Working</span>';
+                    }
+                }
 
                 tr.innerHTML = `
                     <td style="font-weight: 500;">${empName}</td>

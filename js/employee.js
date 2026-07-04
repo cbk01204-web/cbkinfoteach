@@ -212,10 +212,12 @@ const startRealtimeSync = (user) => {
 const handleAttendanceUI = (snap, userEmail, dateString) => {
     const punchInBtn      = document.getElementById('punch-in-btn');
     const punchOutBtn     = document.getElementById('punch-out-btn');
+    const breakBtn        = document.getElementById('break-btn');
     const statusBadge     = document.getElementById('status-badge');
     const checkInTimeEl   = document.getElementById('check-in-time');
     const checkOutTimeEl  = document.getElementById('check-out-time');
     const totalHoursEl    = document.getElementById('total-hours');
+    const totalBreakEl    = document.getElementById('total-break');
     const todayOvertimeEl = document.getElementById('today-overtime');
     const todayStatusEl   = document.getElementById('today-status');
 
@@ -228,6 +230,8 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
     checkInTimeEl.textContent  = "--:-- AM";
     checkOutTimeEl.textContent = "--:-- PM";
     totalHoursEl.textContent    = "0h 0m";
+    if (totalBreakEl) totalBreakEl.textContent = "0h 0m";
+    if (breakBtn) breakBtn.style.display = 'none';
     if (todayOvertimeEl) todayOvertimeEl.textContent = "0h 0m";
     if (todayStatusEl) {
         todayStatusEl.textContent = "—";
@@ -244,6 +248,12 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
             checkInTimeEl.textContent = punchInTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
+        if (totalBreakEl) {
+            const btHours = Math.floor(data.breakTime || 0);
+            const btMins  = Math.round(((data.breakTime || 0) - btHours) * 60);
+            totalBreakEl.textContent = `${btHours}h ${btMins}m`;
+        }
+
         if (data.punchOut) {
             // Completed for today
             const punchOutTime = data.punchOut.toDate();
@@ -251,6 +261,7 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
             
             punchInBtn.disabled     = true;
             punchOutBtn.disabled    = true;
+            if (breakBtn) breakBtn.style.display = 'none';
             statusBadge.className   = 'badge badge-success';
             statusBadge.style.background = 'rgba(16,185,129,0.12)';
             statusBadge.style.color = '#10b981';
@@ -273,23 +284,102 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
                 todayStatusEl.style.color = (data.isLate || data.isEarlyExit) ? '#f59e0b' : '#10b981';
             }
         } else {
-            // Punched In, waiting for exit
-            punchInBtn.disabled     = true;
-            punchOutBtn.disabled    = false;
-            statusBadge.className   = 'badge badge-primary';
-            statusBadge.style.background = 'rgba(79,70,229,0.12)';
-            statusBadge.style.color = '#4f46e5';
-            statusBadge.textContent = 'Punched In';
+            // Punched In
+            const breaks = data.breaks || [];
+            const isOnBreak = breaks.length > 0 && !breaks[breaks.length - 1].end;
+
+            if (isOnBreak) {
+                // On Break State
+                punchInBtn.disabled     = true;
+                punchOutBtn.disabled    = true;
+                statusBadge.className   = 'badge badge-warning';
+                statusBadge.style.background = 'rgba(245,158,11,0.12)';
+                statusBadge.style.color = '#f59e0b';
+                statusBadge.textContent = 'On Break';
+
+                if (breakBtn) {
+                    breakBtn.style.display = 'inline-flex';
+                    breakBtn.innerHTML = '<i class="fa-solid fa-play mr-2"></i> End Break';
+                    breakBtn.className = 'btn btn-primary';
+                    breakBtn.style.marginTop = '1rem';
+                }
+            } else {
+                // Working State
+                punchInBtn.disabled     = true;
+                punchOutBtn.disabled    = false;
+                statusBadge.className   = 'badge badge-primary';
+                statusBadge.style.background = 'rgba(79,70,229,0.12)';
+                statusBadge.style.color = '#4f46e5';
+                statusBadge.textContent = 'Punched In';
+
+                if (breakBtn) {
+                    breakBtn.style.display = 'inline-flex';
+                    breakBtn.innerHTML = '<i class="fa-solid fa-mug-hot mr-2"></i> Start Break';
+                    breakBtn.className = 'btn btn-outline';
+                    breakBtn.style.marginTop = '1rem';
+                }
+            }
 
             if (todayStatusEl) {
                 todayStatusEl.textContent = data.isLate ? 'Late Check In' : 'On Time';
                 todayStatusEl.style.color = data.isLate ? '#f59e0b' : '#10b981';
             }
         }
+
+        // Bind break button action
+        if (breakBtn) {
+            breakBtn.onclick = async () => {
+                if (!activeDocId) return;
+
+                const breaks = data.breaks || [];
+                const isOnBreak = breaks.length > 0 && !breaks[breaks.length - 1].end;
+                const now = new Date();
+
+                breakBtn.disabled = true;
+                if (isOnBreak) {
+                    breakBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Ending Break...';
+                    try {
+                        const lastBreak = breaks[breaks.length - 1];
+                        lastBreak.end = Timestamp.fromDate(now);
+
+                        const start = lastBreak.start.toDate();
+                        const diffMs = now - start;
+                        const breakHours = diffMs / (1000 * 60 * 60);
+
+                        const totalBreakHours = (data.breakTime || 0) + breakHours;
+
+                        await updateDoc(doc(db, "attendance", activeDocId), {
+                            breaks: breaks,
+                            breakTime: totalBreakHours
+                        });
+                        showToast("Break ended, back to work!");
+                    } catch (err) {
+                        console.error("Error ending break:", err);
+                        showToast("Failed to end break.");
+                        breakBtn.disabled = false;
+                    }
+                } else {
+                    breakBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Starting Break...';
+                    try {
+                        const updatedBreaks = [...breaks, { start: Timestamp.fromDate(now), end: null }];
+                        await updateDoc(doc(db, "attendance", activeDocId), {
+                            breaks: updatedBreaks
+                        });
+                        showToast("Break started. Enjoy!");
+                    } catch (err) {
+                        console.error("Error starting break:", err);
+                        showToast("Failed to start break.");
+                        breakBtn.disabled = false;
+                    }
+                }
+            };
+        }
+
     } else {
         // Not punched in yet
         punchInBtn.disabled     = false;
         punchOutBtn.disabled    = true;
+        if (breakBtn) breakBtn.style.display = 'none';
         statusBadge.className   = 'badge badge-warning';
         statusBadge.style.background = 'rgba(245,158,11,0.12)';
         statusBadge.style.color = '#f59e0b';
@@ -322,6 +412,8 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
                 punchOut: null,
                 isLate: isLate,
                 workingHours: 0,
+                breakTime: 0,
+                breaks: [],
                 overtimeHours: 0,
                 isEarlyExit: false
             });
@@ -343,7 +435,13 @@ const handleAttendanceUI = (snap, userEmail, dateString) => {
         try {
             const now = new Date();
             const diffMs = now - punchInTime;
-            const workingHours = diffMs / (1000 * 60 * 60);
+            let workingHours = diffMs / (1000 * 60 * 60);
+
+            // Subtract total break time
+            const docSnap = await getDoc(doc(db, "attendance", activeDocId));
+            const freshData = docSnap.exists() ? docSnap.data() : {};
+            const breakTime = freshData.breakTime || 0;
+            workingHours = Math.max(0, workingHours - breakTime);
 
             const shiftEnd = new Date();
             shiftEnd.setHours(17, 45, 0); // Early exit threshold

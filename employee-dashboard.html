@@ -79,6 +79,9 @@
                             <button id="punch-in-btn" class="btn btn-primary" style="flex: 1; font-weight: 600;"><i class="fa-solid fa-fingerprint mr-2"></i> Punch In</button>
                             <button id="punch-out-btn" class="btn btn-outline" style="flex: 1; font-weight: 600;" disabled><i class="fa-solid fa-arrow-right-from-bracket mr-2"></i> Punch Out</button>
                         </div>
+                        <button id="break-btn" class="btn btn-outline" style="width: 100%; font-weight: 600; margin-top: 1rem; display: none;">
+                            <i class="fa-solid fa-mug-hot mr-2"></i> Start Break
+                        </button>
                     </div>
 
                     <!-- Today's Attendance Summary -->
@@ -95,6 +98,10 @@
                         <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.75rem;">
                             <span style="color: var(--text-muted);">Working Hours:</span>
                             <span id="total-hours" style="font-weight: 600; color: var(--primary);">0h 0m</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.75rem;">
+                            <span style="color: var(--text-muted);">Break Time:</span>
+                            <span id="total-break" style="font-weight: 600; color: var(--text-main);">0h 0m</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.75rem;">
                             <span style="color: var(--text-muted);">Overtime:</span>
