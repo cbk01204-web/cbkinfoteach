@@ -110,11 +110,11 @@ export const initAdminPayroll = async () => {
         const avgSalary = processedCount > 0 ? (monthlyTotal / processedCount) : 0;
 
         // Render stats cards values
-        document.getElementById('stat-monthly-total').textContent = `$${monthlyTotal.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+        document.getElementById('stat-monthly-total').textContent = `₹${monthlyTotal.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
         document.getElementById('stat-processed-count').textContent = processedCount;
         document.getElementById('stat-pending-count').textContent = pendingCount;
-        document.getElementById('stat-avg-salary').textContent = `$${avgSalary.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
-        document.getElementById('stat-highest-salary').textContent = `$${highestSalary.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+        document.getElementById('stat-avg-salary').textContent = `₹${avgSalary.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+        document.getElementById('stat-highest-salary').textContent = `₹${highestSalary.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
 
         // 4. Construct Last 6 Months Labels & Values for Line Chart
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -194,7 +194,7 @@ export const initAdminPayroll = async () => {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { callback: value => `$${value}` },
+                        ticks: { callback: value => `₹${value}` },
                         grid: { color: gridColor, drawBorder: false }
                     },
                     x: {
@@ -228,7 +228,7 @@ export const initAdminPayroll = async () => {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { callback: value => `$${value}` },
+                        ticks: { callback: value => `₹${value}` },
                         grid: { color: gridColor, drawBorder: false }
                     },
                     x: {
@@ -260,7 +260,7 @@ export const initAdminPayroll = async () => {
                 <td style="font-weight: 500;">${emp.firstName} ${emp.lastName}</td>
                 <td>${emp.department || 'N/A'}</td>
                 <td>${emp.role || 'N/A'}</td>
-                <td style="font-weight: 600; color: var(--primary);">$${netSalary.toFixed(2)}</td>
+                <td style="font-weight: 600; color: var(--primary);">₹${netSalary.toFixed(2)}</td>
                 <td>${statusBadge}</td>
                 <td>${actionBtn}</td>
             `;
@@ -308,7 +308,7 @@ export const initAdminPayroll = async () => {
         const net = earnings - deductions;
 
         const display = document.getElementById('net-salary-display');
-        display.textContent = `$${net.toFixed(2)}`;
+        display.textContent = `₹${net.toFixed(2)}`;
         
         if (net < 0) {
             display.style.color = 'var(--danger)';
@@ -359,7 +359,7 @@ export const initAdminPayroll = async () => {
             await setDoc(doc(db, "payroll", docId), payrollData);
             
             // Send Notification
-            await createNotification(email, "Salary Credited", `Your payroll for ${selectedMonth} has been processed. Net Salary: $${netSalary.toFixed(2)}.`, "payroll");
+            await createNotification(email, "Salary Credited", `Your payroll for ${selectedMonth} has been processed. Net Salary: ₹${netSalary.toFixed(2)}.`, "payroll");
 
             modal.classList.remove('active');
             await fetchPayrollData(); // Refresh metrics and table

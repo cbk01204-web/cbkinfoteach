@@ -1,6 +1,6 @@
 import { db } from './firebase-config.js';
 import { 
-    collection, getDocs, query, where 
+    collection, getDocs, query, where, doc, getDoc, setDoc 
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 export const initAdminDepartments = async () => {
@@ -11,14 +11,14 @@ export const initAdminDepartments = async () => {
     const modalTitle = document.getElementById('dept-modal-title');
     const modalTbody = document.getElementById('dept-modal-tbody');
 
-    const DEPARTMENTS = [
-        { name: 'Engineering', icon: 'fa-code', color: 'primary', manager: 'Alex Rivera' },
-        { name: 'Marketing', icon: 'fa-bullhorn', color: 'success', manager: 'Sarah Jenkins' },
-        { name: 'Sales', icon: 'fa-chart-line', color: 'warning', manager: 'Michael Chang' },
-        { name: 'HR', icon: 'fa-users', color: 'info', manager: 'Emma Watson' },
-        { name: 'Support', icon: 'fa-headset', color: 'danger', manager: 'David Miller' }
-    ];
+    // Add Department Modal elements
+    const addDeptBtn = document.getElementById('add-dept-btn');
+    const addDeptModal = document.getElementById('add-dept-modal');
+    const closeAddDeptModal = document.getElementById('close-add-dept-modal');
+    const cancelAddDeptBtn = document.getElementById('cancel-add-dept-btn');
+    const addDeptForm = document.getElementById('add-dept-form');
 
+    let DEPARTMENTS = [];
     let employeesList = [];
     let payrollList = [];
 
@@ -47,7 +47,37 @@ export const initAdminDepartments = async () => {
                 payrollList.push(d.data());
             });
 
+            // Fetch departments from settings/general (guaranteed whitelisted settings rule)
+            DEPARTMENTS = [];
+            try {
+                const generalDocRef = doc(db, "settings", "general");
+                const docSnap = await getDoc(generalDocRef);
+                if (docSnap.exists() && docSnap.data().departments) {
+                    DEPARTMENTS = docSnap.data().departments;
+                } else {
+                    // Seed default departments
+                    DEPARTMENTS = [
+                        { id: '1', name: 'Engineering', icon: 'fa-code', color: 'primary', manager: 'Alex Rivera' },
+                        { id: '2', name: 'Marketing', icon: 'fa-bullhorn', color: 'success', manager: 'Sarah Jenkins' },
+                        { id: '3', name: 'Sales', icon: 'fa-chart-line', color: 'warning', manager: 'Michael Chang' },
+                        { id: '4', name: 'HR', icon: 'fa-users', color: 'info', manager: 'Emma Watson' },
+                        { id: '5', name: 'Support', icon: 'fa-headset', color: 'danger', manager: 'David Miller' }
+                    ];
+                    await setDoc(generalDocRef, { departments: DEPARTMENTS }, { merge: true });
+                }
+            } catch (deptErr) {
+                console.warn("Failed to fetch departments from Firestore (possibly offline). Using local defaults.", deptErr);
+                DEPARTMENTS = [
+                    { id: '1', name: 'Engineering', icon: 'fa-code', color: 'primary', manager: 'Alex Rivera' },
+                    { id: '2', name: 'Marketing', icon: 'fa-bullhorn', color: 'success', manager: 'Sarah Jenkins' },
+                    { id: '3', name: 'Sales', icon: 'fa-chart-line', color: 'warning', manager: 'Michael Chang' },
+                    { id: '4', name: 'HR', icon: 'fa-users', color: 'info', manager: 'Emma Watson' },
+                    { id: '5', name: 'Support', icon: 'fa-headset', color: 'danger', manager: 'David Miller' }
+                ];
+            }
+
             // Set overview stats
+            document.getElementById('stat-total-depts').textContent = DEPARTMENTS.length;
             document.getElementById('stat-total-emp').textContent = employeesList.length;
 
             renderDepartments();
@@ -100,8 +130,13 @@ export const initAdminDepartments = async () => {
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
                         <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">${dept.name}</h3>
-                        <div class="stat-icon ${dept.color}" style="width: 42px; height: 42px; font-size: 1.2rem; border-radius: 10px;">
-                            <i class="fa-solid ${dept.icon}"></i>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <button class="delete-dept-btn icon-btn text-danger" data-id="${dept.id}" title="Delete Department" style="font-size: 0.95rem; border: none; background: transparent; cursor: pointer; opacity: 0.7;">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                            <div class="stat-icon ${dept.color}" style="width: 42px; height: 42px; font-size: 1.2rem; border-radius: 10px;">
+                                <i class="fa-solid ${dept.icon}"></i>
+                            </div>
                         </div>
                     </div>
                     
@@ -113,7 +148,7 @@ export const initAdminDepartments = async () => {
                             <strong>Total Employees:</strong> <span style="color: var(--text-main); font-weight: 500;">${deptEmps.length} Members</span>
                         </p>
                         <p style="margin: 0; color: var(--text-muted);">
-                            <strong>Monthly Budget:</strong> <span style="color: var(--primary); font-weight: 600;">$${totalBudget.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                            <strong>Monthly Budget:</strong> <span style="color: var(--primary); font-weight: 600;">₹${totalBudget.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                         </p>
                     </div>
                 </div>
@@ -143,6 +178,58 @@ export const initAdminDepartments = async () => {
                 openMembersModal(deptName);
             });
         });
+
+        // Bind delete click
+        document.querySelectorAll('.delete-dept-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const deptId = e.currentTarget.getAttribute('data-id');
+                const deptName = DEPARTMENTS.find(d => d.id === deptId)?.name || 'this department';
+                
+                showCustomConfirm(`Are you sure you want to delete the "${deptName}" department? This action cannot be undone.`, async () => {
+                    try {
+                        const updatedDepts = DEPARTMENTS.filter(d => d.id !== deptId);
+                        const generalDocRef = doc(db, "settings", "general");
+                        await setDoc(generalDocRef, { departments: updatedDepts }, { merge: true });
+
+                        import('./utils.js').then(m => m.showToast("Department deleted successfully.", "success"));
+                        await loadData();
+                    } catch (error) {
+                        console.error("Error deleting department:", error);
+                        import('./utils.js').then(m => m.showToast("Failed to delete department.", "danger"));
+                    }
+                });
+            });
+        });
+    };
+
+    const showCustomConfirm = (message, onConfirm) => {
+        const confirmModal = document.getElementById('confirm-delete-modal');
+        const msgEl = document.getElementById('confirm-delete-msg');
+        const cancelBtn = document.getElementById('confirm-delete-cancel-btn');
+        const confirmBtn = document.getElementById('confirm-delete-btn');
+
+        if (!confirmModal || !msgEl || !cancelBtn || !confirmBtn) return;
+
+        msgEl.textContent = message;
+        confirmModal.classList.add('active');
+
+        const closeConfirm = () => {
+            confirmModal.classList.remove('active');
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            const newCancelBtn = cancelBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        };
+
+        const activeConfirmBtn = document.getElementById('confirm-delete-btn');
+        const activeCancelBtn = document.getElementById('confirm-delete-cancel-btn');
+
+        activeCancelBtn.addEventListener('click', closeConfirm);
+        activeConfirmBtn.addEventListener('click', () => {
+            onConfirm();
+            closeConfirm();
+        });
     };
 
     const openMembersModal = (deptName) => {
@@ -171,6 +258,56 @@ export const initAdminDepartments = async () => {
     const closeModal = () => modal.classList.remove('active');
     document.getElementById('close-dept-modal').addEventListener('click', closeModal);
     document.getElementById('close-dept-modal-btn').addEventListener('click', closeModal);
+
+    // Add Department modal open/close
+    const openAddDeptModal = () => {
+        addDeptModal.classList.add('active');
+    };
+    
+    const closeAddDeptModalFn = () => {
+        addDeptModal.classList.remove('active');
+        addDeptForm.reset();
+    };
+
+    if (addDeptBtn) addDeptBtn.addEventListener('click', openAddDeptModal);
+    if (closeAddDeptModal) closeAddDeptModal.addEventListener('click', closeAddDeptModalFn);
+    if (cancelAddDeptBtn) cancelAddDeptBtn.addEventListener('click', closeAddDeptModalFn);
+
+    if (addDeptForm) {
+        addDeptForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('dept-name').value.trim();
+            const manager = document.getElementById('dept-manager').value.trim();
+            const icon = document.getElementById('dept-icon').value;
+            const color = document.getElementById('dept-color').value;
+
+            // Check if department already exists
+            if (DEPARTMENTS.some(d => d.name.toLowerCase() === name.toLowerCase())) {
+                import('./utils.js').then(m => m.showToast("Department name already exists.", "warning"));
+                return;
+            }
+
+            try {
+                const newDept = {
+                    id: Date.now().toString(),
+                    name,
+                    manager,
+                    icon,
+                    color
+                };
+                const updatedDepts = [...DEPARTMENTS, newDept];
+                const generalDocRef = doc(db, "settings", "general");
+                await setDoc(generalDocRef, { departments: updatedDepts }, { merge: true });
+
+                import('./utils.js').then(m => m.showToast("Department added successfully.", "success"));
+                closeAddDeptModalFn();
+                await loadData();
+            } catch (error) {
+                console.error("Error adding department:", error);
+                import('./utils.js').then(m => m.showToast("Failed to add department.", "danger"));
+            }
+        });
+    }
 
     // Initial Load
     loadData();

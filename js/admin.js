@@ -16,7 +16,7 @@
 import { db, auth } from './firebase-config.js';
 import {
     collection, onSnapshot, query,
-    orderBy, limit, getDoc, doc
+    orderBy, limit, getDoc, doc, setDoc
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
@@ -34,6 +34,7 @@ let cacheAttendance  = [];
 let cacheLeaves      = [];
 let cachePayroll     = [];
 let cacheDepartments = [];
+let cacheHolidays    = [];
 
 // ── Listener cleanup handles ──────────────────────────────────────────
 const _unsubs = [];
@@ -168,7 +169,25 @@ const startRealtimeSync = () => {
         onSnapshot(collection(db, 'attendance'),   mkHandler(cacheAttendance,  'Attendance')),
         onSnapshot(collection(db, 'leaves'),       mkHandler(cacheLeaves,      'Leaves')),
         onSnapshot(collection(db, 'payroll'),      mkHandler(cachePayroll,     'Payroll')),
-        onSnapshot(collection(db, 'departments'),  mkHandler(cacheDepartments, 'Departments'))
+        onSnapshot(collection(db, 'departments'),  mkHandler(cacheDepartments, 'Departments')),
+        // General settings & Holidays
+        onSnapshot(doc(db, 'settings', 'general'), (snap, err) => {
+            if (err) {
+                console.error("[HRMS] settings listener error:", err);
+                return;
+            }
+            if (snap.exists()) {
+                const data = snap.data();
+                const name = data.companyName;
+                if (name) {
+                    const brand = document.querySelector('.sidebar-brand h2');
+                    if (brand) brand.textContent = name;
+                    document.title = `Dashboard — ${name} HRMS`;
+                }
+                cacheHolidays = data.holidays || [];
+                scheduleRedraw();
+            }
+        })
     );
 };
 
@@ -198,10 +217,10 @@ const showTrend = (id) => {
 };
 
 const formatPayroll = (value) => {
-    if (value <= 0)        return '$0';
-    if (value < 1_000)     return `$${value.toFixed(0)}`;
-    if (value < 1_000_000) return `$${(value / 1_000).toFixed(1)}k`;
-    return                        `$${(value / 1_000_000).toFixed(2)}m`;
+    if (value <= 0)        return '₹0';
+    if (value < 1_000)     return `₹${value.toFixed(0)}`;
+    if (value < 1_000_000) return `₹${(value / 1_000).toFixed(1)}k`;
+    return                        `₹${(value / 1_000_000).toFixed(2)}m`;
 };
 
 const formatTimeAgo = (date) => {
@@ -447,6 +466,8 @@ const initCalendar = () => {
             { date: '12-26', name: "Boxing Day"      },
         ];
 
+        let selectedDateStr = null;
+
         const renderCalendar = () => {
             gridEl.innerHTML = '';
             monthYearEl.textContent = `${MONTH_NAMES[curMonth]} ${curYear}`;
@@ -478,7 +499,19 @@ const initCalendar = () => {
 
                 // A. Public holidays (from static list)
                 const hol = PUBLIC_HOLIDAYS.find(h => h.date === mdKey);
-                if (hol) dayEvents.push({ text: `🎉 ${hol.name}`, type: 'holiday' });
+                if (hol) dayEvents.push({ text: `🎉 ${hol.name}`, type: 'holiday', isCustom: false });
+
+                // Custom dynamic holidays declared by Admin
+                const customHols = cacheHolidays.filter(h => h.date === dateKey || h.date === mdKey);
+                customHols.forEach(h => {
+                    dayEvents.push({ 
+                        id: h.id, 
+                        text: `🎉 ${h.name}`, 
+                        rawName: h.name, 
+                        type: 'holiday', 
+                        isCustom: true 
+                    });
+                });
 
                 // B. Employee birthdays (from Firestore cache)
                 cacheEmployees.forEach(emp => {
@@ -558,12 +591,49 @@ const initCalendar = () => {
 
                 // Click: show events in the detail panel
                 const showEvents = () => {
+                    selectedDateStr = dateKey;
                     if (eventDateEl) eventDateEl.textContent = `${MONTH_NAMES[curMonth]} ${day}, ${curYear}`;
+                    
+                    const addHolidayBtn = document.getElementById('add-holiday-btn');
+                    if (addHolidayBtn) addHolidayBtn.style.display = 'inline-flex';
+
                     if (eventListEl) {
                         if (dayEvents.length === 0) {
                             eventListEl.innerHTML = '<li>No events scheduled.</li>';
                         } else {
-                            eventListEl.innerHTML = dayEvents.map(ev => `<li>${ev.text}</li>`).join('');
+                            eventListEl.innerHTML = '';
+                            dayEvents.forEach(ev => {
+                                const li = document.createElement('li');
+                                li.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;';
+                                
+                                const span = document.createElement('span');
+                                span.textContent = ev.text;
+                                li.appendChild(span);
+
+                                if (ev.isCustom) {
+                                    const delBtn = document.createElement('button');
+                                    delBtn.className = 'icon-btn text-danger';
+                                    delBtn.style.cssText = 'border:none; background:transparent; cursor:pointer; padding:0.1rem 0.3rem; font-size:0.75rem;';
+                                    delBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+                                    delBtn.title = 'Remove Holiday';
+                                    delBtn.addEventListener('click', async (e) => {
+                                        e.stopPropagation();
+                                        if (confirm(`Remove holiday "${ev.rawName}"?`)) {
+                                            try {
+                                                const updatedHols = cacheHolidays.filter(h => h.id !== ev.id);
+                                                const generalDocRef = doc(db, "settings", "general");
+                                                await setDoc(generalDocRef, { holidays: updatedHols }, { merge: true });
+                                                import('./utils.js').then(m => m.showToast("Holiday removed successfully.", "success"));
+                                            } catch (err) {
+                                                console.error("Error removing holiday:", err);
+                                                import('./utils.js').then(m => m.showToast("Failed to remove holiday.", "danger"));
+                                            }
+                                        }
+                                    });
+                                    li.appendChild(delBtn);
+                                }
+                                eventListEl.appendChild(li);
+                            });
                         }
                     }
                     // Highlight selected
@@ -593,6 +663,64 @@ const initCalendar = () => {
             if (curMonth > 11) { curMonth = 0; curYear++; }
             renderCalendar();
         });
+
+        // ── Holiday Modal Setup ──
+        const addHolidayBtn = document.getElementById('add-holiday-btn');
+        const holidayModal = document.getElementById('holiday-modal');
+        const closeHolidayModal = document.getElementById('close-holiday-modal');
+        const cancelHolidayBtn = document.getElementById('cancel-holiday-btn');
+        const holidayForm = document.getElementById('holiday-form');
+        
+        const openHolidayModal = () => {
+            if (!selectedDateStr) return;
+            const parts = selectedDateStr.split('-');
+            const y = parts[0];
+            const m = MONTH_NAMES[parseInt(parts[1]) - 1];
+            const d = parseInt(parts[2]);
+            document.getElementById('holiday-date-display').value = `${m} ${d}, ${y}`;
+            holidayModal.classList.add('active');
+        };
+        
+        const closeHolidayModalFn = () => {
+            holidayModal.classList.remove('active');
+            holidayForm.reset();
+        };
+
+        if (addHolidayBtn) addHolidayBtn.addEventListener('click', openHolidayModal);
+        if (closeHolidayModal) closeHolidayModal.addEventListener('click', closeHolidayModalFn);
+        if (cancelHolidayBtn) cancelHolidayBtn.addEventListener('click', closeHolidayModalFn);
+
+        if (holidayForm) {
+            holidayForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('holiday-name').value.trim();
+                const recur = document.getElementById('holiday-recur').value === 'true';
+                
+                if (!selectedDateStr || !name) return;
+
+                const parts = selectedDateStr.split('-');
+                const dateVal = recur ? `${parts[1]}-${parts[2]}` : selectedDateStr;
+
+                const newHoliday = {
+                    id: Date.now().toString(),
+                    date: dateVal,
+                    name: name,
+                    recur: recur
+                };
+
+                try {
+                    const updatedHols = [...cacheHolidays, newHoliday];
+                    const generalDocRef = doc(db, "settings", "general");
+                    await setDoc(generalDocRef, { holidays: updatedHols }, { merge: true });
+
+                    import('./utils.js').then(m => m.showToast("Holiday declared successfully.", "success"));
+                    closeHolidayModalFn();
+                } catch (err) {
+                    console.error("Error declaring holiday:", err);
+                    import('./utils.js').then(m => m.showToast("Failed to declare holiday.", "danger"));
+                }
+            });
+        }
 
         renderCalendar();
 

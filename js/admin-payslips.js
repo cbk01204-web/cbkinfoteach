@@ -83,8 +83,8 @@ export const initAdminPayslips = async () => {
                 <td style="font-weight: 500;">${emp.name}</td>
                 <td>${emp.department}</td>
                 <td>${ps.monthYear}</td>
-                <td>$${basic.toFixed(2)}</td>
-                <td style="font-weight: 600; color: var(--primary);">$${net.toFixed(2)}</td>
+                <td>₹${basic.toFixed(2)}</td>
+                <td style="font-weight: 600; color: var(--primary);">₹${net.toFixed(2)}</td>
                 <td>
                     <button class="btn btn-outline view-payslip-btn" data-id="${ps.id}" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">
                         <i class="fa-solid fa-eye mr-1"></i> View
@@ -119,7 +119,8 @@ export const initAdminPayslips = async () => {
         document.getElementById('payslip-emp-dept').textContent = emp.department;
         document.getElementById('payslip-emp-role').textContent = emp.role;
         document.getElementById('payslip-ref').textContent = `CBK-PS-${year}-${ps.userId.split('@')[0].toUpperCase()}`;
-        document.getElementById('payslip-date').textContent = ps.processedAt ? ps.processedAt.split('T')[0] : 'N/A';
+        const processedDate = ps.processedAt?.toDate ? ps.processedAt.toDate() : (ps.processedAt ? new Date(ps.processedAt) : null);
+        document.getElementById('payslip-date').textContent = processedDate ? processedDate.toISOString().split('T')[0] : 'N/A';
 
         // Earnings values
         const basic = ps.basicSalary || 0;
@@ -135,18 +136,18 @@ export const initAdminPayslips = async () => {
         const tax = deductions - pf > 0 ? deductions - pf : 0;
         const other = 0;
 
-        document.getElementById('payslip-val-basic').textContent = `$${basic.toFixed(2)}`;
-        document.getElementById('payslip-val-hra').textContent = `$${hra.toFixed(2)}`;
-        document.getElementById('payslip-val-allowances').textContent = `$${allowances.toFixed(2)}`;
-        document.getElementById('payslip-val-bonus').textContent = `$${bonus.toFixed(2)}`;
-        document.getElementById('payslip-val-gross').textContent = `$${gross.toFixed(2)}`;
+        document.getElementById('payslip-val-basic').textContent = `₹${basic.toFixed(2)}`;
+        document.getElementById('payslip-val-hra').textContent = `₹${hra.toFixed(2)}`;
+        document.getElementById('payslip-val-allowances').textContent = `₹${allowances.toFixed(2)}`;
+        document.getElementById('payslip-val-bonus').textContent = `₹${bonus.toFixed(2)}`;
+        document.getElementById('payslip-val-gross').textContent = `₹${gross.toFixed(2)}`;
 
-        document.getElementById('payslip-val-pf').textContent = `$${pf.toFixed(2)}`;
-        document.getElementById('payslip-val-tax').textContent = `$${tax.toFixed(2)}`;
-        document.getElementById('payslip-val-other').textContent = `$${other.toFixed(2)}`;
-        document.getElementById('payslip-val-deductions').textContent = `$${deductions.toFixed(2)}`;
+        document.getElementById('payslip-val-pf').textContent = `₹${pf.toFixed(2)}`;
+        document.getElementById('payslip-val-tax').textContent = `₹${tax.toFixed(2)}`;
+        document.getElementById('payslip-val-other').textContent = `₹${other.toFixed(2)}`;
+        document.getElementById('payslip-val-deductions').textContent = `₹${deductions.toFixed(2)}`;
 
-        document.getElementById('payslip-val-net').textContent = `$${(ps.netSalary || 0).toFixed(2)}`;
+        document.getElementById('payslip-val-net').textContent = `₹${(ps.netSalary || 0).toFixed(2)}`;
 
         // Open modal
         modal.classList.add('active');

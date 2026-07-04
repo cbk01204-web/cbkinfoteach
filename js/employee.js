@@ -513,7 +513,7 @@ const handlePayslipWidget = (data) => {
         const descEl = payslipCard.querySelector('p');
         if (descEl) {
             const netVal = Number(data.netSalary || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            descEl.textContent = `Latest Payslip (Net: $${netVal})`;
+            descEl.textContent = `Latest Payslip (Net: ₹${netVal})`;
         }
 
         const trendEl = payslipCard.querySelector('.stat-trend');
@@ -606,7 +606,7 @@ const startActivityFeedListener = (user) => {
             if (ts) {
                 activities.push({
                     date: pay.monthYear,
-                    text: `Payslip Generated (Net: $${(pay.netSalary || 0).toLocaleString(undefined, {maximumFractionDigits: 0})})`,
+                    text: `Payslip Generated (Net: ₹${(pay.netSalary || 0).toLocaleString(undefined, {maximumFractionDigits: 0})})`,
                     status: 'Issued',
                     statusClass: 'badge-success',
                     timestamp: ts

@@ -1,6 +1,6 @@
 import { db, storage } from './firebase-config.js';
 import { 
-    collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy 
+    collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDoc 
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 import { 
     ref, uploadBytes, getDownloadURL 
@@ -10,6 +10,52 @@ import { showToast } from './utils.js';
 // State
 let employeesData = [];
 let currentEditId = null;
+
+const populateDepartmentsDropdown = async () => {
+    try {
+        let depts = [];
+        try {
+            const deptSnap = await getDoc(doc(db, "settings", "general"));
+            if (deptSnap.exists() && deptSnap.data().departments) {
+                const list = deptSnap.data().departments || [];
+                depts = list.map(d => d.name).filter(Boolean);
+            }
+        } catch (deptErr) {
+            console.warn("Failed to fetch departments from Firestore (possibly offline). Using local defaults.", deptErr);
+        }
+        
+        // If empty, fall back to default
+        if (depts.length === 0) {
+            depts = ["Engineering", "Marketing", "Sales", "HR", "Support"];
+        }
+
+        // Populate department-filter
+        const deptFilter = document.getElementById('department-filter');
+        if (deptFilter) {
+            deptFilter.innerHTML = '<option value="">All Departments</option>';
+            depts.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                deptFilter.appendChild(opt);
+            });
+        }
+
+        // Populate emp-dept
+        const empDept = document.getElementById('emp-dept');
+        if (empDept) {
+            empDept.innerHTML = '<option value="">Select Department...</option>';
+            depts.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                empDept.appendChild(opt);
+            });
+        }
+    } catch (e) {
+        console.error("Error populating departments dropdown:", e);
+    }
+};
 
 export const initEmployeeManagement = async () => {
     console.log("Employee Management initialized.");
@@ -27,6 +73,7 @@ export const initEmployeeManagement = async () => {
     const deptFilter = document.getElementById('department-filter');
 
     // Load Data
+    await populateDepartmentsDropdown();
     await fetchEmployees();
 
     // Modal Triggers

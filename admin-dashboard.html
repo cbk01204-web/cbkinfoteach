@@ -385,6 +385,11 @@
                             style="margin:.35rem 0 0;padding-left:1rem;color:var(--text-muted);line-height:1.6;max-height:90px;overflow-y:auto;">
                             <li>No events scheduled.</li>
                         </ul>
+                        <div style="display:flex; justify-content:flex-end; margin-top:0.65rem;">
+                            <button id="add-holiday-btn" class="btn btn-outline" style="font-size:0.75rem; padding:0.35rem 0.75rem; border-radius:6px; display:none; align-items:center; gap:0.25rem;">
+                                <i class="fa-solid fa-plus"></i> Declare Holiday
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -392,6 +397,43 @@
         </div><!-- /content-wrapper -->
     </main>
 </div><!-- /dashboard-layout -->
+
+<!-- Declare Holiday Modal -->
+<div id="holiday-modal" class="modal">
+    <div class="modal-content" style="max-width: 400px; padding: 2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h3 id="holiday-modal-title" style="margin:0; font-size:1.25rem; font-weight:600; color:var(--text-main);">Declare Holiday</h3>
+            <button type="button" id="close-holiday-modal" class="icon-btn" style="border:none; background:transparent; font-size:1.1rem; cursor:pointer; color:var(--text-muted);">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <form id="holiday-form">
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label class="form-label" style="display:block; margin-bottom:0.35rem; font-weight:500; font-size:0.85rem;">Selected Date</label>
+                <input type="text" id="holiday-date-display" class="form-control" readonly style="background:var(--hover-bg); cursor:not-allowed; padding:0.5rem; border:1px solid var(--border-color); border-radius:6px; width:100%;">
+            </div>
+            
+            <div class="form-group" style="margin-bottom:1rem;">
+                <label class="form-label" for="holiday-name" style="display:block; margin-bottom:0.35rem; font-weight:500; font-size:0.85rem;">Holiday/Event Name</label>
+                <input type="text" id="holiday-name" class="form-control" placeholder="e.g. Foundation Day" required style="padding:0.5rem; border:1px solid var(--border-color); border-radius:6px; width:100%;">
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.5rem;">
+                <label class="form-label" for="holiday-recur" style="display:block; margin-bottom:0.35rem; font-weight:500; font-size:0.85rem;">Recurring Yearly?</label>
+                <select id="holiday-recur" class="form-control" style="padding:0.5rem; border:1px solid var(--border-color); border-radius:6px; width:100%;">
+                    <option value="false">Only for this year</option>
+                    <option value="true">Every year on this day</option>
+                </select>
+            </div>
+            
+            <div class="action-btns" style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.5rem;">
+                <button type="button" id="cancel-holiday-btn" class="btn btn-outline" style="padding:0.5rem 1rem;">Cancel</button>
+                <button type="submit" id="save-holiday-btn" class="btn btn-primary" style="padding:0.5rem 1rem;">Declare Holiday</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- ── Scripts ──────────────────────────────────────────────── -->
 <script type="module">

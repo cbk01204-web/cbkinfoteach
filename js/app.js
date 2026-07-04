@@ -613,7 +613,7 @@ const initGlobalSearch = () => {
                 cache.payroll.push({
                     user: data.userId,
                     month: data.monthYear,
-                    salary: `$${data.netSalary ? data.netSalary.toFixed(0) : '0'}`
+                    salary: `₹${data.netSalary ? data.netSalary.toFixed(0) : '0'}`
                 });
             });
 

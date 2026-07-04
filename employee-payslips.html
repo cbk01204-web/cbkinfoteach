@@ -7,6 +7,8 @@
     <title>My Payslips - Employee - CBK INFOTECH</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/employee.css">
+    <!-- Include admin.css for modal styles -->
+    <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
     <style>
         /* Print Styles for Payslip Modal */
@@ -158,23 +160,23 @@
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                                 <td style="padding: 0.5rem 0; color: var(--text-muted);">Basic Salary</td>
-                                <td id="payslip-val-basic" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                                <td id="payslip-val-basic" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">₹0.00</td>
                             </tr>
                             <tr>
                                 <td style="padding: 0.5rem 0; color: var(--text-muted);">HRA</td>
-                                <td id="payslip-val-hra" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                                <td id="payslip-val-hra" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">₹0.00</td>
                             </tr>
                             <tr>
                                 <td style="padding: 0.5rem 0; color: var(--text-muted);">Allowances</td>
-                                <td id="payslip-val-allowances" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                                <td id="payslip-val-allowances" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">₹0.00</td>
                             </tr>
                             <tr>
                                 <td style="padding: 0.5rem 0; color: var(--text-muted);">Bonus</td>
-                                <td id="payslip-val-bonus" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                                <td id="payslip-val-bonus" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">₹0.00</td>
                             </tr>
                             <tr style="border-top: 1px solid var(--border-color); font-weight: 600;">
                                 <td style="padding: 0.5rem 0; color: var(--text-main);">Gross Earnings</td>
-                                <td id="payslip-val-gross" style="padding: 0.5rem 0; text-align: right; color: var(--text-main);">$0.00</td>
+                                <td id="payslip-val-gross" style="padding: 0.5rem 0; text-align: right; color: var(--text-main);">₹0.00</td>
                             </tr>
                         </table>
                     </div>
@@ -184,19 +186,19 @@
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                                 <td style="padding: 0.5rem 0; color: var(--text-muted);">Provident Fund (PF)</td>
-                                <td id="payslip-val-pf" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                                <td id="payslip-val-pf" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">₹0.00</td>
                             </tr>
                             <tr>
                                 <td style="padding: 0.5rem 0; color: var(--text-muted);">Tax</td>
-                                <td id="payslip-val-tax" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                                <td id="payslip-val-tax" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">₹0.00</td>
                             </tr>
                             <tr>
                                 <td style="padding: 0.5rem 0; color: var(--text-muted);">Other Deductions</td>
-                                <td id="payslip-val-other" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">$0.00</td>
+                                <td id="payslip-val-other" style="padding: 0.5rem 0; text-align: right; font-weight: 500;">₹0.00</td>
                             </tr>
                             <tr style="border-top: 1px solid var(--border-color); font-weight: 600;">
                                 <td style="padding: 0.5rem 0; color: var(--text-main);">Total Deductions</td>
-                                <td id="payslip-val-deductions" style="padding: 0.5rem 0; text-align: right; color: var(--text-main);">$0.00</td>
+                                <td id="payslip-val-deductions" style="padding: 0.5rem 0; text-align: right; color: var(--text-main);">₹0.00</td>
                             </tr>
                         </table>
                     </div>
@@ -208,7 +210,7 @@
                         <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem; font-weight: 500;">NET PAYABLE AMOUNT</p>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--text-muted);">Rounded net salary amount</p>
                     </div>
-                    <h2 id="payslip-val-net" style="margin: 0; color: var(--primary); font-size: 1.8rem; font-weight: 700;">$0.00</h2>
+                    <h2 id="payslip-val-net" style="margin: 0; color: var(--primary); font-size: 1.8rem; font-weight: 700;">₹0.00</h2>
                 </div>
             </div>
 
@@ -227,6 +229,27 @@
 
         const init = () => {
             initEmployeePayslips();
+
+            // Handle Theme toggle UI logic
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            if (themeToggleBtn) {
+                const currentTheme = localStorage.getItem('theme');
+                if (currentTheme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                    themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                }
+                themeToggleBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-theme');
+                    let theme = 'light';
+                    if (document.body.classList.contains('dark-theme')) {
+                        theme = 'dark';
+                        themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                    } else {
+                        themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                    }
+                    localStorage.setItem('theme', theme);
+                });
+            }
 
             // Logout button
             const logoutBtn = document.getElementById('logout-btn');
