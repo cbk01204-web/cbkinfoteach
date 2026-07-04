@@ -761,22 +761,30 @@ const startActivityFeedListener = (user) => {
             attendanceList = [];
             snap.forEach(d => attendanceList.push(d.data()));
             redrawFeed();
+        }, (err) => {
+            console.warn("[HRMS] Activity feed attendance listener restricted:", err);
         }),
         onSnapshot(query(collection(db, "leaves"), where("userId", "==", userEmail)), (snap) => {
             leaveList = [];
             snap.forEach(d => leaveList.push(d.data()));
             redrawFeed();
+        }, (err) => {
+            console.warn("[HRMS] Activity feed leaves listener restricted:", err);
         }),
         onSnapshot(query(collection(db, "payroll"), where("userId", "==", userEmail)), (snap) => {
             payrollList = [];
             snap.forEach(d => payrollList.push(d.data()));
             redrawFeed();
+        }, (err) => {
+            console.warn("[HRMS] Activity feed payroll listener restricted:", err);
         }),
         onSnapshot(doc(db, "employees", userUid), (docSnap) => {
             if (docSnap.exists()) {
                 employeeData = docSnap.data();
                 redrawFeed();
             }
+        }, (err) => {
+            console.warn("[HRMS] Activity feed employee profile listener restricted:", err);
         })
     );
 };
