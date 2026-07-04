@@ -214,6 +214,7 @@ export const initAdminLeaves = async () => {
                     fetchAllLeaves();
                 } catch (err) {
                     console.error("Error approving leave:", err);
+                    import('./utils.js').then(m => m.showToast("Failed to approve leave application.", "danger"));
                     btnEl.disabled = false;
                     btnEl.innerHTML = '<i class="fa-solid fa-check"></i>';
                 }
@@ -240,6 +241,7 @@ export const initAdminLeaves = async () => {
                     fetchAllLeaves();
                 } catch (err) {
                     console.error("Error rejecting leave:", err);
+                    import('./utils.js').then(m => m.showToast("Failed to reject leave application.", "danger"));
                     btnEl.disabled = false;
                     btnEl.innerHTML = '<i class="fa-solid fa-xmark"></i>';
                 }
