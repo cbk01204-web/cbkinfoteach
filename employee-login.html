@@ -118,19 +118,31 @@
 
     <!-- Beautiful Password Reset Modal -->
     <div id="reset-password-modal" style="display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(15,23,42,0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; animation: fadeIn 0.3s ease;">
-        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2.5rem; width: 100%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔑</div>
-            <h3 style="color: #f8fafc; margin: 0 0 0.5rem; font-family: Inter, sans-serif; font-size: 1.25rem;">Create New Password</h3>
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2.5rem; width: 100%; max-width: 440px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔐</div>
+            <h3 style="color: #f8fafc; margin: 0 0 0.5rem; font-family: Inter, sans-serif; font-size: 1.25rem;">Reset Password</h3>
             <p style="color: #94a3b8; font-size: 0.85rem; margin: 0 0 1.5rem; font-family: Inter, sans-serif; line-height: 1.4;">
-                Enter a new password for <span id="reset-email-display" style="font-weight: 600; color: #818cf8;">email</span>.
+                Select a recovery method for <span id="reset-email-display" style="font-weight: 600; color: #818cf8;">email</span>.
             </p>
-            <div style="position: relative; margin-bottom: 1.5rem; text-align: left;">
-                <label style="display: block; color: #94a3b8; font-size: 0.75rem; font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase;">New Password</label>
-                <input type="password" id="reset-password-input" placeholder="At least 6 characters" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #f8fafc; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.95rem; outline: none; box-sizing: border-box; transition: border-color 0.2s;" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#334155'">
+            
+            <div style="text-align: left; background: rgba(30, 41, 59, 0.5); border: 1px solid #334155; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                <div style="font-weight: 600; color: #f8fafc; font-size: 0.85rem; margin-bottom: 0.25rem;">📧 Option A: Production Email Link</div>
+                <div style="color: #94a3b8; font-size: 0.75rem; line-height: 1.3; margin-bottom: 0.75rem;">
+                    Sends a secure reset link to your email inbox. Click the link to update your password.
+                </div>
+                <button type="button" id="reset-email-btn" style="width: 100%; background: #4f46e5; color: #ffffff; border: none; padding: 0.6rem; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">Send Reset Email</button>
             </div>
-            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                <button type="button" id="reset-cancel-btn" style="background: transparent; color: #94a3b8; border: 1px solid #334155; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#334155'; this.style.color='#f8fafc'" onmouseout="this.style.background='transparent'; this.style.color='#94a3b8'">Cancel</button>
-                <button type="button" id="reset-submit-btn" style="background: #4f46e5; color: #ffffff; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">Update Password</button>
+
+            <div style="text-align: left; background: rgba(79, 70, 229, 0.05); border: 1px dashed #4f46e5; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                <div style="font-weight: 600; color: #818cf8; font-size: 0.85rem; margin-bottom: 0.25rem;">💻 Option B: Local Testing Bypass</div>
+                <div style="color: #94a3b8; font-size: 0.75rem; line-height: 1.3; margin-bottom: 0.5rem;">
+                    If you are testing locally with a mock email, run this command in your terminal to instantly update the password:
+                </div>
+                <code style="display: block; background: #0f172a; padding: 0.5rem; border-radius: 4px; color: #34d399; font-family: monospace; font-size: 0.75rem; margin-bottom: 0.25rem; word-break: break-all;">node scripts/reset-password.js</code>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end;">
+                <button type="button" id="reset-close-btn" style="background: transparent; color: #94a3b8; border: 1px solid #334155; padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#334155'; this.style.color='#f8fafc'" onmouseout="this.style.background='transparent'; this.style.color='#94a3b8'">Close</button>
             </div>
         </div>
     </div>
@@ -173,9 +185,8 @@
 
         const resetPasswordModal = document.getElementById('reset-password-modal');
         const resetEmailDisplay = document.getElementById('reset-email-display');
-        const resetPasswordInput = document.getElementById('reset-password-input');
-        const resetCancelBtn = document.getElementById('reset-cancel-btn');
-        const resetSubmitBtn = document.getElementById('reset-submit-btn');
+        const resetEmailBtn = document.getElementById('reset-email-btn');
+        const resetCloseBtn = document.getElementById('reset-close-btn');
 
         let isLoginMode = true;
 
@@ -279,7 +290,7 @@
             }
         });
 
-        // Handle Forgot Password
+        // Handle Forgot Password click to show Option A/B Modal
         forgotPasswordLink.addEventListener('click', (e) => {
             e.preventDefault();
             errorMsg.style.display = 'none';
@@ -294,30 +305,24 @@
             }
 
             resetEmailDisplay.textContent = email;
-            resetPasswordInput.value = '';
             resetPasswordModal.style.display = 'flex';
         });
 
-        // Cancel reset
-        resetCancelBtn.addEventListener('click', () => {
+        // Close reset modal
+        resetCloseBtn.addEventListener('click', () => {
             resetPasswordModal.style.display = 'none';
         });
 
-        // Submit new password
-        resetSubmitBtn.addEventListener('click', async () => {
+        // Option A: Send Reset Email
+        resetEmailBtn.addEventListener('click', async () => {
             const email = emailInput.value.trim();
-            const newPassword = resetPasswordInput.value.trim();
-            if (newPassword.length < 6) {
-                alert("Password must be at least 6 characters long.");
-                return;
-            }
-
             resetPasswordModal.style.display = 'none';
-            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Resetting Password...';
+            
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Sending Email...';
             submitBtn.disabled = true;
 
             try {
-                const message = await resetPassword(email, newPassword);
+                const message = await resetPassword(email);
                 successMsg.textContent = message;
                 successMsg.style.display = 'block';
             } catch (error) {
