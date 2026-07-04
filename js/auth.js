@@ -13,7 +13,8 @@ import {
     signInWithPopup,
     createUserWithEmailAndPassword,
     updateProfile,
-    fetchSignInMethodsForEmail
+    fetchSignInMethodsForEmail,
+    getAuth
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
@@ -25,36 +26,6 @@ try {
 } catch (err) {
     console.warn("Secondary Auth initialization check:", err);
 }
-
-function getAuth(appInstance) {
-    const { getAuth: fbGetAuth } = requirefbAuth();
-    return fbGetAuth(appInstance);
-}
-
-function requirefbAuth() {
-    return {
-        getAuth: (app) => {
-            const { getAuth } = AuthSDK;
-            return getAuth(app);
-        }
-    };
-}
-
-const AuthSDK = {
-    getAuth: (app) => {
-        return getAuthFromSDK(app);
-    }
-};
-
-function getAuthFromSDK(app) {
-    try {
-        const { getAuth: fbGetAuth } = window.firebaseAuth || {};
-        if (fbGetAuth) return fbGetAuth(app);
-    } catch (e) {}
-    return getAuthDirect(app);
-}
-
-import { getAuth as getAuthDirect } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
 // Helper to map Firebase errors to user-friendly messages
 const getErrorMessage = (error) => {
@@ -99,21 +70,32 @@ export const loginUser = async (email, password, rememberMe, expectedRole) => {
 
         // Fetch user document from Firestore 'users' collection to check role
         const userDocRef = doc(db, 'users', user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-
         let role = null;
-        if (userDocSnap.exists()) {
-            role = userDocSnap.data().role;
-        } else {
-            // Fallback to employees collection check
-            const empDocRef = doc(db, 'employees', user.uid);
-            const empDocSnap = await getDoc(empDocRef);
-            if (empDocSnap.exists()) {
-                role = empDocSnap.data().role || 'employee';
-            } else {
-                await signOut(auth);
-                throw new Error("Unauthorized access. User profile not found.");
+        try {
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+                role = userDocSnap.data().role;
             }
+        } catch (e) {
+            console.warn("Users collection read skipped/denied, checking employees fallback:", e);
+        }
+
+        if (!role) {
+            try {
+                // Fallback to employees collection check
+                const empDocRef = doc(db, 'employees', user.uid);
+                const empDocSnap = await getDoc(empDocRef);
+                if (empDocSnap.exists()) {
+                    role = empDocSnap.data().role || 'employee';
+                }
+            } catch (e) {
+                console.warn("Employees collection fallback lookup failed:", e);
+            }
+        }
+
+        if (!role) {
+            await signOut(auth);
+            throw new Error("Unauthorized access. User profile not found in database.");
         }
 
         // Validate role matches expected login portal
@@ -298,30 +280,31 @@ export const checkAuthState = (requiredRole = null) => {
             showSessionExpiredOverlay(requiredRole);
         } else {
             try {
-                // Securely retrieve role from Firestore directly to block local storage manipulation
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDocSnap = await getDoc(userDocRef);
-                
                 let currentRole = null;
                 let status = 'Active';
 
-                if (userDocSnap.exists()) {
-                    currentRole = userDocSnap.data().role;
-                } else {
-                    // Fallback to employees collection
+                // Securely retrieve role from Firestore directly to block local storage manipulation
+                const userDocRef = doc(db, 'users', user.uid);
+                try {
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        currentRole = userDocSnap.data().role;
+                    }
+                } catch (e) {
+                    console.warn("Route guard: users/uid read skipped, checking employees fallback:", e);
+                }
+
+                try {
                     const empDocRef = doc(db, 'employees', user.uid);
                     const empDocSnap = await getDoc(empDocRef);
                     if (empDocSnap.exists()) {
-                        currentRole = empDocSnap.data().role || 'employee';
+                        if (!currentRole) {
+                            currentRole = empDocSnap.data().role || 'employee';
+                        }
                         status = empDocSnap.data().status || 'Active';
                     }
-                }
-
-                // Check active status
-                const empDocRef = doc(db, 'employees', user.uid);
-                const empDocSnap = await getDoc(empDocRef);
-                if (empDocSnap.exists()) {
-                    status = empDocSnap.data().status || 'Active';
+                } catch (e) {
+                    console.warn("Route guard: employees/uid read skipped:", e);
                 }
 
                 if (status && status.toLowerCase() === 'disabled') {
@@ -351,8 +334,14 @@ export const checkAuthState = (requiredRole = null) => {
                 }
             } catch (err) {
                 console.error("Route guard verification failed:", err);
-                const currentRole = localStorage.getItem('userRole');
-                if (requiredRole && currentRole !== requiredRole) {
+                // Fallback to local storage state during network drops, keeping offline capabilities safe
+                if (!navigator.onLine) {
+                    const currentRole = localStorage.getItem('userRole');
+                    if (requiredRole && currentRole !== requiredRole) {
+                        showSessionExpiredOverlay(requiredRole);
+                    }
+                } else {
+                    await signOut(auth);
                     showSessionExpiredOverlay(requiredRole);
                 }
             }
